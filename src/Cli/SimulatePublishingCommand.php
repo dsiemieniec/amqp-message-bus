@@ -2,6 +2,7 @@
 
 namespace App\Cli;
 
+use App\Command\CommandBusInterface;
 use App\Command\SimpleCommand;
 use App\Rabbit\CommandPublisherInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -18,7 +19,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class SimulatePublishingCommand extends Command
 {
     public function __construct(
-        private CommandPublisherInterface $commandPublisher
+        private CommandBusInterface $commandBus
     ) {
         parent::__construct();
     }
@@ -39,7 +40,7 @@ class SimulatePublishingCommand extends Command
         $progressBar->start();
 
         for ($i = 0; $i < $numberOfCommands; $i++) {
-            $this->commandPublisher->publish(
+            $this->commandBus->executeAsync(
                 new SimpleCommand(\random_int($i, 99999999), \uniqid('', true))
             );
 

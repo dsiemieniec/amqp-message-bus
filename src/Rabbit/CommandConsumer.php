@@ -2,6 +2,7 @@
 
 namespace App\Rabbit;
 
+use App\Command\CommandBusInterface;
 use App\Serializer\CommandSerializerInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -14,7 +15,8 @@ class CommandConsumer implements CommandConsumerInterface
     private AMQPChannel $channel;
 
     public function __construct(
-        private CommandSerializerInterface $serializer
+        private CommandSerializerInterface $serializer,
+        private CommandBusInterface $commandBus
     ) {
         $this->connection = new AMQPStreamConnection('localhost', 5672, 'guest', 'guest');
         $this->channel = $this->connection->channel();
@@ -51,7 +53,9 @@ class CommandConsumer implements CommandConsumerInterface
 
     private function onMessage(AMQPMessage $message): void
     {
-        echo $message->getBody() . PHP_EOL;
+        $this->commandBus->execute(
+            $this->serializer->deserialize($message->getBody())
+        );
 
         $this->channel->basic_ack($message->getDeliveryTag());
     }
