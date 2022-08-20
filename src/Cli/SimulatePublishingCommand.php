@@ -4,7 +4,6 @@ namespace App\Cli;
 
 use App\Command\CommandBusInterface;
 use App\Command\SimpleCommand;
-use App\Rabbit\CommandPublisherInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
