@@ -2,7 +2,10 @@
 
 namespace App\Cli;
 
+use App\Command\AnotherSimpleCommand;
 use App\Command\CommandBusInterface;
+use App\Command\CommandInterface;
+use App\Command\DispatchedToOwnQueueCommand;
 use App\Command\SimpleCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -39,9 +42,7 @@ class SimulatePublishingCommand extends Command
         $progressBar->start();
 
         for ($i = 0; $i < $numberOfCommands; $i++) {
-            $this->commandBus->executeAsync(
-                new SimpleCommand(\random_int($i, 99999999), \uniqid('', true))
-            );
+            $this->commandBus->executeAsync($this->getRandomCommand());
 
             $progressBar->advance();
         }
@@ -49,5 +50,17 @@ class SimulatePublishingCommand extends Command
         $io->success('Done');
 
         return Command::SUCCESS;
+    }
+
+    public function getRandomCommand(): CommandInterface
+    {
+        $i = \random_int(0, 2);
+        if ($i === 0) {
+            return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
+        } elseif ($i === 1) {
+            return new AnotherSimpleCommand(\uniqid('', true), \uniqid('', true));
+        }
+
+        return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));
     }
 }

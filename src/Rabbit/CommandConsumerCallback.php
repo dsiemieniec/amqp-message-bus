@@ -6,7 +6,7 @@ use App\Command\CommandBusInterface;
 use App\Serializer\CommandSerializerInterface;
 use PhpAmqpLib\Message\AMQPMessage;
 
-class CommandConsumeCallback implements ConsumerCallbackInterface
+class CommandConsumerCallback implements ConsumerCallbackInterface
 {
     public function __construct(
         private CommandSerializerInterface $serializer,
