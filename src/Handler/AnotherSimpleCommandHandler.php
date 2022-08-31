@@ -3,10 +3,8 @@
 namespace App\Handler;
 
 use App\Command\AnotherSimpleCommand;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
-class AnotherSimpleCommandHandler
+final class AnotherSimpleCommandHandler implements HandlerInterface
 {
     public function __invoke(AnotherSimpleCommand $command): void
     {

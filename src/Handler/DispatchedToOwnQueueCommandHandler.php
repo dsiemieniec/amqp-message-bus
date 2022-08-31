@@ -3,10 +3,8 @@
 namespace App\Handler;
 
 use App\Command\DispatchedToOwnQueueCommand;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
-class DispatchedToOwnQueueCommandHandler
+final class DispatchedToOwnQueueCommandHandler implements HandlerInterface
 {
     public function __invoke(DispatchedToOwnQueueCommand $command): void
     {

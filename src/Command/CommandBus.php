@@ -2,23 +2,23 @@
 
 namespace App\Command;
 
+use App\Handler\HandlerRegistryInterface;
 use App\Rabbit\CommandPublisherInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 class CommandBus implements CommandBusInterface
 {
     public function __construct(
-        private MessageBusInterface $messageBus,
+        private HandlerRegistryInterface $handlerRegistry,
         private CommandPublisherInterface $commandPublisher
     ) {
     }
 
-    public function execute(CommandInterface $command)
+    public function execute(CommandInterface $command): void
     {
-        $this->messageBus->dispatch($command);
+        $this->handlerRegistry->getHandler($command)($command);
     }
 
-    public function executeAsync(CommandInterface $command)
+    public function executeAsync(CommandInterface $command): void
     {
         $this->commandPublisher->publish($command);
     }
