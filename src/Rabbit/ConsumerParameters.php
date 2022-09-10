@@ -2,6 +2,8 @@
 
 namespace App\Rabbit;
 
+use App\Config\Queue;
+
 class ConsumerParameters
 {
     public function __construct(

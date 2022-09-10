@@ -1,16 +1,22 @@
 <?php
 
-namespace App\Rabbit;
+namespace App\Config;
 
 class Queue
 {
     public function __construct(
         private string $name,
+        private Connection $connection,
         private bool $passive = false,
         private bool $durable = false,
         private bool $exclusive = false,
         private bool $autoDelete = false
     ) {
+    }
+
+    public function getConnection(): Connection
+    {
+        return $this->connection;
     }
 
     public function getName(): string

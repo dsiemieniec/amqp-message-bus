@@ -2,6 +2,10 @@
 
 namespace App\Rabbit;
 
+use App\Config\Binding;
+use App\Config\Connection;
+use App\Config\Exchange;
+use App\Config\Queue;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -10,11 +14,16 @@ class RabbitConnection implements ConnectionInterface
 {
     private AMQPStreamConnection $connection;
     private AMQPChannel $channel;
-    private array $declaredQueues = [];
 
-    public function __construct()
+    public function __construct(Connection $connectionConfig)
     {
-        $this->connection = new AMQPStreamConnection('localhost', 5672, 'guest', 'guest');
+        $this->connection = new AMQPStreamConnection(
+            $connectionConfig->getHost(),
+            $connectionConfig->getPort(),
+            $connectionConfig->getUser(),
+            $connectionConfig->getPassword(),
+            $connectionConfig->getVHost()
+        );
         $this->channel = $this->connection->channel();
     }
 
@@ -26,16 +35,27 @@ class RabbitConnection implements ConnectionInterface
 
     public function declareQueue(Queue $queue): void
     {
-        if (!\array_key_exists($queue->getName(), $this->declaredQueues)) {
-            $this->channel->queue_declare(
-                $queue->getName(),
-                $queue->isPassive(),
-                $queue->isDurable(),
-                $queue->isExclusive(),
-                $queue->isAutoDelete()
-            );
-            $this->declaredQueues[$queue->getName()] = true;
-        }
+        $this->channel->queue_declare(
+            $queue->getName(),
+            $queue->isPassive(),
+            $queue->isDurable(),
+            $queue->isExclusive(),
+            $queue->isAutoDelete()
+        );
+    }
+
+    public function declareExchange(Exchange $exchange): void
+    {
+        $this->channel->exchange_declare($exchange->getName(), $exchange->getType()->value);
+    }
+
+    public function bindQueue(Binding $binding): void
+    {
+        $this->channel->queue_bind(
+            $binding->getQueue()->getName(),
+            $binding->getExchange()->getName(),
+            $binding->getRoutingKey()
+        );
     }
 
     public function publish(AMQPMessage $msg, string $routingKey, string $exchange = ''): void
@@ -45,7 +65,6 @@ class RabbitConnection implements ConnectionInterface
 
     public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void
     {
-        $this->declareQueue($parameters->getQueue());
         $this->channel->basic_consume(
             $parameters->getQueue()->getName(),
             $parameters->getTag(),

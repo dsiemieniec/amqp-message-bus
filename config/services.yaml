@@ -29,3 +29,10 @@ services:
     App\Handler\HandlerRegistry:
         arguments:
             - !tagged_iterator app.command_handler
+
+    App\Config\ConfigFactory:
+        arguments:
+            - '%kernel.project_dir%/config/services/async_command_bus.yaml'
+
+    App\Config\Config:
+        factory: ['@App\Config\ConfigFactory', 'create']
