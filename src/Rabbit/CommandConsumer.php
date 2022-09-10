@@ -13,10 +13,10 @@ class CommandConsumer implements CommandConsumerInterface
     ) {
     }
 
-    public function consume(string $name): void
+    public function consume(string $name, ConsumerLimits $limits): void
     {
         $queueConfig = $this->config->getQueueConfig($name);
         $connection = new RabbitConnection($queueConfig->getConnection());
-        $connection->consume(new ConsumerParameters($queueConfig), $this->callback);
+        $connection->consume(new ConsumerParameters($queueConfig, $limits), $this->callback);
     }
 }

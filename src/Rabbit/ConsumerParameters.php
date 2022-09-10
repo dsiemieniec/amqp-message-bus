@@ -8,10 +8,11 @@ class ConsumerParameters
 {
     public function __construct(
         private Queue $queue,
+        private ConsumerLimits $limits,
         private string $tag = '',
         private bool $ack = true,
         private bool $exclusive = false,
-        private bool $local = true
+        private bool $local = true,
     ) {
     }
 
@@ -38,5 +39,10 @@ class ConsumerParameters
     public function isLocal(): bool
     {
         return $this->local;
+    }
+
+    public function getLimits(): ConsumerLimits
+    {
+        return $this->limits;
     }
 }

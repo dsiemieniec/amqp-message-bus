@@ -7,6 +7,8 @@ use App\Config\Connection;
 use App\Config\Exchange;
 use App\Config\PublisherTarget;
 use App\Config\Queue;
+use App\Exception\MessageLimitException;
+use App\Exception\TimeLimitException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -76,6 +78,16 @@ class RabbitConnection implements ConnectionInterface
         $this->channel->basic_publish($msg, $target->getExchange(), $target->getRoutingKey());
     }
 
+    public function ack(AMQPMessage $msg): void
+    {
+        $this->channel->basic_ack($msg->getDeliveryTag());
+    }
+
+    public function nack(AMQPMessage $msg): void
+    {
+        $this->channel->basic_nack($msg->getDeliveryTag());
+    }
+
     public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void
     {
         $this->channel->basic_consume(
@@ -88,18 +100,44 @@ class RabbitConnection implements ConnectionInterface
             fn(AMQPMessage $message) => $callback->onMessage($message, $this)
         );
 
+
+        $limits = $parameters->getLimits();
+        $startedAt = time();
+        $i = 0;
         while ($this->channel->is_open()) {
-            $this->channel->wait();
+            $timeout = $this->calculateTimeout($startedAt, $limits);
+            if ($timeout <= 1) {
+                $this->channel->stopConsume();
+            }
+            $this->channel->wait(null, false, $timeout);
+            if ($limits->hasMessagesLimit() && ++$i >= $limits->getMessagesLimit()) {
+                $this->channel->stopConsume();
+                throw new MessageLimitException($limits->getMessagesLimit());
+            }
+            if ($this->timeLimitExceeded($startedAt, $limits)) {
+                throw new TimeLimitException($limits->getTimeLimit());
+            }
         }
     }
 
-    public function ack(AMQPMessage $msg): void
+    private function calculateTimeout(int $startedAt, ConsumerLimits $limits): int
     {
-        $this->channel->basic_ack($msg->getDeliveryTag());
+        $timeout = $limits->getTimeout() ?? 0;
+        if ($limits->hasTimeLimit()) {
+            $finishAt = $startedAt + $limits->getTimeLimit();
+            $finishTimeout = $finishAt - \time();
+            if ($finishTimeout <= 1) {
+                return 1;
+            } elseif ($timeout > 0 && $finishTimeout < $timeout) {
+                return $finishTimeout;
+            }
+        }
+
+        return $timeout;
     }
 
-    public function nack(AMQPMessage $msg): void
+    private function timeLimitExceeded(int $startedAt, ConsumerLimits $limits): bool
     {
-        $this->channel->basic_nack($msg->getDeliveryTag());
+        return $limits->hasTimeLimit() && \time() >= $startedAt + $limits->getTimeLimit();
     }
 }
