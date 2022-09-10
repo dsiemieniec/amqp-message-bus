@@ -52,3 +52,7 @@ async_command_bus:
           name: test_exchange_name
           routing_key: test_routing_key
 ```
+
+### Delayed
+
+https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/
