@@ -7,7 +7,8 @@ class Exchange
     public function __construct(
         private string $name,
         private ExchangeType $type,
-        private Connection $connection
+        private Connection $connection,
+        private bool $delayedActive = false
     ) {
     }
 
@@ -24,5 +25,10 @@ class Exchange
     public function getConnection(): Connection
     {
         return $this->connection;
+    }
+
+    public function isDelayedActive(): bool
+    {
+        return $this->delayedActive;
     }
 }

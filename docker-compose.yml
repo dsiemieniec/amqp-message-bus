@@ -10,3 +10,6 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
+      - "./rabbitmq_delayed_message_exchange-3.10.2.ez:/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez"

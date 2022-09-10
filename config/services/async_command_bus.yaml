@@ -16,6 +16,11 @@ async_command_bus:
       connection: second
       name: test_exchange
       type: direct
+    delayed_exchange:
+      connection: default
+      name: delayed_exchange
+      type: direct
+      delayed_active: true
   queues:
     first_queue_name:
       connection: default
@@ -32,7 +37,17 @@ async_command_bus:
       queue: second_queue_name
       exchange: test_exchange_name
       routing_key: test_routing_key
+    delayed_exchange_binding:
+      queue: first_queue_name
+      exchange: delayed_exchange
+      routing_key: another_simple_command
   commands:
+    command_published_to_delayed_exchange:
+      class: App\Command\AnotherSimpleCommand
+      publisher:
+        exchange:
+          name: delayed_exchange
+          routing_key: another_simple_command
     command_published_to_exchange:
       class: App\Command\DispatchedToOwnQueueCommand
       publisher:

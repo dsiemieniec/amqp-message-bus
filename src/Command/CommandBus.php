@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Handler\HandlerRegistryInterface;
 use App\Rabbit\CommandPublisherInterface;
+use App\Utils\Delay;
 
 class CommandBus implements CommandBusInterface
 {
@@ -18,8 +19,8 @@ class CommandBus implements CommandBusInterface
         $this->handlerRegistry->getHandler($command)($command);
     }
 
-    public function executeAsync(CommandInterface $command): void
+    public function executeAsync(CommandInterface $command, ?Delay $delay = null): void
     {
-        $this->commandPublisher->publish($command);
+        $this->commandPublisher->publish($command, $delay);
     }
 }

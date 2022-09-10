@@ -51,7 +51,8 @@ class ConfigFactory
                 new Exchange(
                     $params['name'],
                     ExchangeType::from($params['type']),
-                    $connections->get($params['connection'])
+                    $connections->get($params['connection']),
+                    (bool)($params['delayed_active'] ?? false)
                 )
             );
         }

@@ -7,6 +7,7 @@ use App\Command\CommandBusInterface;
 use App\Command\CommandInterface;
 use App\Command\DispatchedToOwnQueueCommand;
 use App\Command\SimpleCommand;
+use App\Utils\Delay;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -42,7 +43,7 @@ class SimulatePublishingCommand extends Command
         $progressBar->start();
 
         for ($i = 0; $i < $numberOfCommands; $i++) {
-            $this->commandBus->executeAsync($this->getRandomCommand());
+            $this->commandBus->executeAsync($this->getRandomCommand(), Delay::seconds(\random_int(0, 15)));
 
             $progressBar->advance();
         }

@@ -10,6 +10,7 @@ use App\Config\Queue;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 class RabbitConnection implements ConnectionInterface
 {
@@ -47,7 +48,18 @@ class RabbitConnection implements ConnectionInterface
 
     public function declareExchange(Exchange $exchange): void
     {
-        $this->channel->exchange_declare($exchange->getName(), $exchange->getType()->value);
+        $arguments = [];
+        $type = $exchange->getType()->value;
+        if ($exchange->isDelayedActive()) {
+            $arguments = new AMQPTable(['x-delayed-type' => $type]);
+            $type = 'x-delayed-message';
+        }
+        $this->channel->exchange_declare(
+            $exchange->getName(),
+            $type,
+            auto_delete: false,
+            arguments: $arguments
+        );
     }
 
     public function bindQueue(Binding $binding): void
