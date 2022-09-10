@@ -28,8 +28,8 @@ class ConfigFactory
         $map = new ConnectionsMap();
         foreach ($yaml['connections'] ?? [] as $name => $params) {
             $map->put(
-                $name,
                 new Connection(
+                    $name,
                     $params['host'],
                     (int)$params['port'],
                     $params['user'],

@@ -13,9 +13,9 @@ class ConnectionsMap
         $this->connections = [];
     }
 
-    public function put(string $name, Connection $connection): void
+    public function put(Connection $connection): void
     {
-        $this->connections[$name] = $connection;
+        $this->connections[$connection->getName()] = $connection;
     }
 
     public function get(string $name): Connection

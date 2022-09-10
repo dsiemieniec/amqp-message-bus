@@ -5,12 +5,18 @@ namespace App\Config;
 class Connection
 {
     public function __construct(
+        private string $name,
         private string $host,
         private int $port,
         private string $user,
         private string $password,
         private string $vHost = '/'
     ) {
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function getHost(): string
