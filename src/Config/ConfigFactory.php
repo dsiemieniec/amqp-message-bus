@@ -107,8 +107,7 @@ class ConfigFactory
     private function readCommands(array $yaml, ExchangesMap $exchanges, QueuesMap $queues): CommandPublisherConfigsMap
     {
         $map = new CommandPublisherConfigsMap();
-        foreach ($yaml['commands'] ?? [] as $name => $params) {
-            $class = $params['class'];
+        foreach ($yaml['commands'] ?? [] as $class => $params) {
             $commandConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
@@ -122,7 +121,7 @@ class ConfigFactory
                 );
             }
 
-            $map->put($name, $commandConfig ?? new QueuePublishedCommandConfig($class, $queues->get('default')));
+            $map->put($commandConfig ?? new QueuePublishedCommandConfig($class, $queues->get('default')));
         }
 
         return $map;

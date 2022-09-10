@@ -42,14 +42,12 @@ async_command_bus:
       exchange: delayed_exchange
       routing_key: another_simple_command
   commands:
-    command_published_to_delayed_exchange:
-      class: App\Command\AnotherSimpleCommand
+    App\Command\AnotherSimpleCommand:
       publisher:
         exchange:
           name: delayed_exchange
           routing_key: another_simple_command
-    command_published_to_exchange:
-      class: App\Command\DispatchedToOwnQueueCommand
+    App\Command\DispatchedToOwnQueueCommand:
       publisher:
         exchange:
           name: test_exchange_name

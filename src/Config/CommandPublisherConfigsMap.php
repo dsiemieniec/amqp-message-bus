@@ -7,42 +7,29 @@ use App\Exception\MissingMapItemException;
 class CommandPublisherConfigsMap
 {
     /** @var array<string, CommandPublisherConfig> */
-    private array $configsByName;
-    /** @var array<string, CommandPublisherConfig> */
-    private array $configsByClass;
+    private array $commands;
 
     public function __construct()
     {
-        $this->configsByName = [];
-        $this->configsByClass = [];
+        $this->commands = [];
     }
 
-    public function put(string $name, CommandPublisherConfig $config): void
+    public function put(CommandPublisherConfig $config): void
     {
-        $this->configsByName[$name] = $config;
-        $this->configsByClass[$config->getCommandClass()] = $config;
+        $this->commands[$config->getCommandClass()] = $config;
     }
 
-    public function getByName(string $name): CommandPublisherConfig
+    public function get(string $commandClass): CommandPublisherConfig
     {
-        if (!\array_key_exists($name, $this->configsByName)) {
-            throw new MissingMapItemException('Missing command config with name ' . $name);
-        }
-
-        return $this->configsByName[$name];
-    }
-
-    public function getByClass(string $commandClass): CommandPublisherConfig
-    {
-        if (!$this->existsByClass($commandClass)) {
+        if (!$this->exists($commandClass)) {
             throw new MissingMapItemException('Missing command config for ' . $commandClass);
         }
 
-        return $this->configsByClass[$commandClass];
+        return $this->commands[$commandClass];
     }
 
-    public function existsByClass(string $commandClass): bool
+    public function exists(string $commandClass): bool
     {
-        return \array_key_exists($commandClass, $this->configsByClass);
+        return \array_key_exists($commandClass, $this->commands);
     }
 }

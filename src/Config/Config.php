@@ -14,14 +14,13 @@ class Config
 
     public function getCommandPublisherConfig(string $commandClass): CommandPublisherConfig
     {
-        if (!$this->commandPublisherConfigs->existsByClass($commandClass)) {
+        if (!$this->commandPublisherConfigs->exists($commandClass)) {
             $this->commandPublisherConfigs->put(
-                $commandClass,
                 new QueuePublishedCommandConfig($commandClass, $this->queues->get('default'))
             );
         }
 
-        return $this->commandPublisherConfigs->getByClass($commandClass);
+        return $this->commandPublisherConfigs->get($commandClass);
     }
 
     public function getQueueConfig(string $name): Queue
