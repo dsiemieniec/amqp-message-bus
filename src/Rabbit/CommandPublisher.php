@@ -3,31 +3,28 @@
 namespace App\Rabbit;
 
 use App\Command\CommandInterface;
-use App\Config\Queue;
+use App\Config\Config;
 use App\Serializer\CommandSerializerInterface;
 use PhpAmqpLib\Message\AMQPMessage;
 
 class CommandPublisher implements CommandPublisherInterface
 {
-    private const QUEUE_NAME = 'command_bus';
-
     public function __construct(
+        private Config $config,
+        private CommandSerializerInterface $serializer
     ) {
     }
 
     public function publish(CommandInterface $command): void
     {
-//        $this->declareQueue();
-//        $this->connection->publish(
-//            new AMQPMessage(
-//                $this->serializer->serialize($command)
-//            ),
-//            self::QUEUE_NAME
-//        );
-    }
+        $publisherConfig = $this->config->getCommandPublisherConfig(\get_class($command));
+        $connection = new RabbitConnection($publisherConfig->getConnection());
 
-    private function declareQueue(): void
-    {
-        //$this->connection->declareQueue(new Queue(self::QUEUE_NAME));
+        $connection->publish(
+            new AMQPMessage(
+                $this->serializer->serialize($command)
+            ),
+            $publisherConfig->getPublisherTarget()
+        );
     }
 }

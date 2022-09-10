@@ -4,5 +4,5 @@ namespace App\Rabbit;
 
 interface CommandConsumerInterface
 {
-    public function consume(): void;
+    public function consume(string $name): void;
 }

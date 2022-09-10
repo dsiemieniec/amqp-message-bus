@@ -5,6 +5,7 @@ namespace App\Rabbit;
 use App\Config\Binding;
 use App\Config\Connection;
 use App\Config\Exchange;
+use App\Config\PublisherTarget;
 use App\Config\Queue;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -58,9 +59,9 @@ class RabbitConnection implements ConnectionInterface
         );
     }
 
-    public function publish(AMQPMessage $msg, string $routingKey, string $exchange = ''): void
+    public function publish(AMQPMessage $msg, PublisherTarget $target): void
     {
-        $this->channel->basic_publish($msg, $exchange, $routingKey);
+        $this->channel->basic_publish($msg, $target->getExchange(), $target->getRoutingKey());
     }
 
     public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void

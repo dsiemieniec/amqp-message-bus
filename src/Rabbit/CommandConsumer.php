@@ -2,17 +2,21 @@
 
 namespace App\Rabbit;
 
+use App\Config\Config;
+
+
 class CommandConsumer implements CommandConsumerInterface
 {
-    private const QUEUE_NAME = 'command_bus';
-
     public function __construct(
+        private Config $config,
+        private ConsumerCallbackInterface $callback
     ) {
     }
 
-    public function consume(): void
+    public function consume(string $name): void
     {
-        //$this->connection->consume(new ConsumerParameters(new Queue(self::QUEUE_NAME)), $this->callback);
+        $queueConfig = $this->config->getQueueConfig($name);
+        $connection = new RabbitConnection($queueConfig->getConnection());
+        $connection->consume(new ConsumerParameters($queueConfig), $this->callback);
     }
 }
-

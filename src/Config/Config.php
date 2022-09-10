@@ -24,6 +24,11 @@ class Config
         return $this->commandPublisherConfigs->getByClass($commandClass);
     }
 
+    public function getQueueConfig(string $name): Queue
+    {
+        return $this->queues->get($name);
+    }
+
     /** @return Queue[] */
     public function getAllQueues(): array
     {

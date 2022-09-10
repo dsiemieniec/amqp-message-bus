@@ -33,12 +33,8 @@ async_command_bus:
       exchange: test_exchange_name
       routing_key: test_routing_key
   commands:
-    command_published_to_queue:
-      class: FirstTestClass
-      publisher:
-        queue: first_queue_name
     command_published_to_exchange:
-      class: SecondTestClass
+      class: App\Command\DispatchedToOwnQueueCommand
       publisher:
         exchange:
           name: test_exchange_name
