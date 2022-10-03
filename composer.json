@@ -8,6 +8,7 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "php-amqplib/php-amqplib": "^3.2",
+        "phpstan/phpstan": "^1.8",
         "symfony/console": "6.1.*",
         "symfony/dotenv": "6.1.*",
         "symfony/flex": "^2",
@@ -59,7 +60,8 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
-        "test": "bin/phpunit"
+        "test": "bin/phpunit",
+        "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=-1"
     },
     "conflict": {
         "symfony/symfony": "*"
