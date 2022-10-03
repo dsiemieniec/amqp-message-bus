@@ -6,10 +6,8 @@ use App\Command\CommandInterface;
 use App\Exception\HandlerDuplicateException;
 use App\Exception\HandlerMissingException;
 use App\Exception\HandlerRegistryException;
-use ReflectionException;
 use ReflectionNamedType;
 use ReflectionObject;
-use RuntimeException;
 
 final class HandlerRegistry implements HandlerRegistryInterface
 {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Cli;
 
 use App\Command\AnotherSimpleCommand;
@@ -37,7 +39,7 @@ class SimulatePublishingCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $numberOfCommands = $input->getArgument('numberOfCommands');
+        $numberOfCommands = (int)$input->getArgument('numberOfCommands');
         $progressBar = new ProgressBar($output, $numberOfCommands);
 
         $progressBar->start();
