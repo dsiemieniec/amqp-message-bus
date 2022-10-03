@@ -2,6 +2,7 @@
 
 namespace App\Config;
 
+use Exception;
 use Symfony\Component\Yaml\Yaml;
 
 class ConfigFactory
@@ -23,6 +24,9 @@ class ConfigFactory
         return new Config($exchanges, $queues, $bindings, $commands);
     }
 
+    /**
+     * @param array<string, mixed> $yaml
+     */
     private function readConnections(array $yaml): ConnectionsMap
     {
         $map = new ConnectionsMap();
@@ -42,6 +46,9 @@ class ConfigFactory
         return $map;
     }
 
+    /**
+     * @param array<string, mixed> $yaml
+     */
     private function readExchanges(array $yaml, ConnectionsMap $connections): ExchangesMap
     {
         $map = new ExchangesMap();
@@ -60,6 +67,9 @@ class ConfigFactory
         return $map;
     }
 
+    /**
+     * @param array<string, mixed> $yaml
+     */
     private function readQueues(array $yaml, ConnectionsMap $connections): QueuesMap
     {
         $map = new QueuesMap();
@@ -87,6 +97,10 @@ class ConfigFactory
         return $map;
     }
 
+    /**
+     * @param array<string, mixed> $yaml
+     * @throws Exception
+     */
     private function readBindings(array $yaml, ExchangesMap $exchanges, QueuesMap $queues): BindingsMap
     {
         $map = new BindingsMap();
@@ -104,6 +118,10 @@ class ConfigFactory
         return $map;
     }
 
+    /**
+     * @param array<string, mixed> $yaml
+     * @throws Exception
+     */
     private function readCommands(array $yaml, ExchangesMap $exchanges, QueuesMap $queues): CommandPublisherConfigsMap
     {
         $map = new CommandPublisherConfigsMap();

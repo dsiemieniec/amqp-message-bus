@@ -19,7 +19,7 @@ class BindingsMap
         $this->bindings[$name] = $binding;
     }
 
-    public function get(string $name): Queue
+    public function get(string $name): Binding
     {
         if (!\array_key_exists($name, $this->bindings)) {
             throw new MissingMapItemException('Missing binding config with name ' . $name);

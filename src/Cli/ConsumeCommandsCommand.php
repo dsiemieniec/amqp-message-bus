@@ -26,7 +26,7 @@ class ConsumeCommandsCommand extends Command
         parent::__construct();
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->addArgument('name', InputOption::VALUE_REQUIRED, '', 'default');
         $this->addOption('time-limit', null, InputOption::VALUE_OPTIONAL, 'Consumer time limit in seconds', 0);

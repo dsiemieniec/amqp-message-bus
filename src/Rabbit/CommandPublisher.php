@@ -12,13 +12,15 @@ use PhpAmqpLib\Wire\AMQPTable;
 
 class CommandPublisher implements CommandPublisherInterface
 {
-    private array $connections;
+    /**
+     * @var array<string, ConnectionInterface>
+     */
+    private array $connections = [];
 
     public function __construct(
         private Config $config,
         private CommandSerializerInterface $serializer
     ) {
-        $this->connections = [];
     }
 
     public function publish(CommandInterface $command, ?Delay $delay = null): void
@@ -34,7 +36,7 @@ class CommandPublisher implements CommandPublisherInterface
         );
     }
 
-    private function getConnection(ConnectionConfig $connectionConfig): RabbitConnection
+    private function getConnection(ConnectionConfig $connectionConfig): ConnectionInterface
     {
         if (!\array_key_exists($connectionConfig->getName(), $this->connections)) {
             $this->connections[$connectionConfig->getName()] = new RabbitConnection($connectionConfig);

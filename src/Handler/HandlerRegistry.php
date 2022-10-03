@@ -3,7 +3,11 @@
 namespace App\Handler;
 
 use App\Command\CommandInterface;
+use App\Exception\HandlerDuplicateException;
+use App\Exception\HandlerMissingException;
+use App\Exception\HandlerRegistryException;
 use ReflectionException;
+use ReflectionNamedType;
 use ReflectionObject;
 use RuntimeException;
 
@@ -16,18 +20,46 @@ final class HandlerRegistry implements HandlerRegistryInterface
 
     /**
      * @param HandlerInterface[] $handlers
-     * @throws ReflectionException
      */
     public function __construct(iterable $handlers)
     {
-        // ToDo: compiler pass
         foreach ($handlers as $handler) {
             $reflectionClass = new ReflectionObject($handler);
+            if (!$reflectionClass->hasMethod('__invoke')) {
+                throw new HandlerRegistryException(
+                    \sprintf('__invoke method not implemented in %s', \get_class($handler))
+                );
+            }
             $method = $reflectionClass->getMethod('__invoke');
+            if (\count($method->getParameters()) !== 1) {
+                throw new HandlerRegistryException(
+                    \sprintf(
+                        'Invalid number of parameters of __invoke method in class %s. Expected 1 got %d',
+                        \get_class($handler),
+                        \count($method->getParameters())
+                    )
+                );
+            }
             $param = $method->getParameters()[0]->getType();
+            if ($param === null) {
+                throw new HandlerRegistryException(
+                    \sprintf(
+                        'Unable to register handler. __invoke method parameter of class %s is missing type.',
+                        \get_class($handler)
+                    )
+                );
+            }
+            if (!($param instanceof ReflectionNamedType)) {
+                throw new HandlerRegistryException(
+                    \sprintf(
+                        'Unable to register handler. Got invalid reflection parameter type of %s',
+                        \get_class($param)
+                    )
+                );
+            }
+
             if (isset($this->registry[$param->getName()])) {
-                // ToDo: custom exception
-                throw new RuntimeException(\sprintf('%s already has handler', $param->getName()));
+                throw new HandlerDuplicateException(\sprintf('%s already has handler', $param->getName()));
             }
             $this->registry[$param->getName()] = $handler;
         }
@@ -35,7 +67,11 @@ final class HandlerRegistry implements HandlerRegistryInterface
 
     public function getHandler(CommandInterface $command): HandlerInterface
     {
-        // ToDo: throw custom exception if handler does not exist
-        return $this->registry[\get_class($command)];
+        $commandClass = \get_class($command);
+        if (!isset($this->registry[$commandClass])) {
+            throw new HandlerMissingException(\sprintf('Handler not registered for command %s', $commandClass));
+        }
+
+        return $this->registry[$commandClass];
     }
 }

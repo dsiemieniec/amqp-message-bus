@@ -122,7 +122,7 @@ class RabbitConnection implements ConnectionInterface
 
     private function calculateTimeout(int $startedAt, ConsumerLimits $limits): int
     {
-        $timeout = $limits->getTimeout() ?? 0;
+        $timeout = $limits->getTimeout();
         if ($limits->hasTimeLimit()) {
             $finishAt = $startedAt + $limits->getTimeLimit();
             $finishTimeout = $finishAt - \time();

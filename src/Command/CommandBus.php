@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Exception\CommandBusException;
 use App\Handler\HandlerRegistryInterface;
 use App\Rabbit\CommandPublisherInterface;
 use App\Utils\Delay;
@@ -16,7 +17,12 @@ class CommandBus implements CommandBusInterface
 
     public function execute(CommandInterface $command): void
     {
-        $this->handlerRegistry->getHandler($command)($command);
+        $handler = $this->handlerRegistry->getHandler($command);
+        if (!\is_callable($handler)) {
+            throw new CommandBusException(\sprintf('%s is not callable', \get_class($handler)));
+        }
+
+        $handler($command);
     }
 
     public function executeAsync(CommandInterface $command, ?Delay $delay = null): void

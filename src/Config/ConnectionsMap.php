@@ -6,6 +6,7 @@ use App\Exception\MissingMapItemException;
 
 class ConnectionsMap
 {
+    /** @var array<string, Connection> */
     private array $connections;
 
     public function __construct()
