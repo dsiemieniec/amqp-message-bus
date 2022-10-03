@@ -42,13 +42,13 @@ async_command_bus:
       exchange: delayed_exchange
       routing_key: another_simple_command
   commands:
-    App\Command\AnotherSimpleCommand:
-      publisher:
-        exchange:
-          name: delayed_exchange
-          routing_key: another_simple_command
-    App\Command\DispatchedToOwnQueueCommand:
-      publisher:
-        exchange:
-          name: test_exchange_name
-          routing_key: test_routing_key
+#    App\Command\AnotherSimpleCommand:
+#      publisher:
+#        exchange:
+#          name: delayed_exchange
+#          routing_key: another_simple_command
+#    App\Command\DispatchedToOwnQueueCommand:
+#      publisher:
+#        exchange:
+#          name: test_exchange_name
+#          routing_key: test_routing_key

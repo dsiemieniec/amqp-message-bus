@@ -7,6 +7,8 @@ namespace App\Rabbit;
 use App\Command\CommandInterface;
 use App\Config\Config;
 use App\Config\Connection as ConnectionConfig;
+use App\Rabbit\Message\MessageEnvelopeInterface;
+use App\Rabbit\Message\PropertyKey;
 use App\Serializer\CommandSerializerInterface;
 use App\Utils\Delay;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -27,10 +29,10 @@ class CommandPublisher implements CommandPublisherInterface
 
     public function publish(CommandInterface $command, ?Delay $delay = null): void
     {
-        $message = new AMQPMessage($this->serializer->serialize($command));
-        if ($delay !== null) {
-            $message->set('application_headers', new AMQPTable(['x-delay' => $delay->getValue()]));
-        }
+        $message = $this->transformEnvelope(
+            $this->serializer->serialize($command),
+            $delay
+        );
         $publisherConfig = $this->config->getCommandPublisherConfig(\get_class($command));
         $this->getConnection($publisherConfig->getConnection())->publish(
             $message,
@@ -45,5 +47,26 @@ class CommandPublisher implements CommandPublisherInterface
         }
 
         return $this->connections[$connectionConfig->getName()];
+    }
+
+    private function transformEnvelope(MessageEnvelopeInterface $envelope, ?Delay $delay = null): AMQPMessage
+    {
+        $properties = [];
+        $headers =  [];
+        foreach ($envelope->getProperties()->all() as $property) {
+            if ($property->getKey()->equals(PropertyKey::Headers)) {
+                $headers[] = [$property->getKey()->value => $property->getPropertyValueAsString()];
+            } else {
+                $properties[$property->getKey()->value] = $property->getPropertyValueAsString();
+            }
+        }
+
+        if ($delay !== null) {
+            $headers[] = ['x-delay' => $delay->getValue()];
+        }
+
+        $properties['application_headers'] = new AMQPTable($headers);
+
+        return new AMQPMessage((string) $envelope->getBody(), $properties);
     }
 }

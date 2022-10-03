@@ -3,14 +3,14 @@
 namespace App\Tests\Serializer;
 
 use App\Command\SimpleCommand;
-use App\Serializer\CommandSerializer;
+use App\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
 
 class CommandSerializerTest extends TestCase
 {
     public function testCanSerializeSimpleCommand(): void
     {
-        $serializer = new CommandSerializer();
+        $serializer = new DefaultCommandSerializer();
         $command = new SimpleCommand(1, 'test');
 
         self::assertEquals(
