@@ -112,7 +112,7 @@ class ConfigFactory
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
                 $commandConfig = new QueuePublishedCommandConfig($class, $queues->get($publisherConfig['queue']));
-            } elseif(\array_key_exists('exchange', $publisherConfig)) {
+            } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
                 $commandConfig = new ExchangePublishedCommandConfig(
                     $class,

@@ -4,7 +4,6 @@ namespace App\Rabbit;
 
 use App\Config\Config;
 
-
 class CommandConsumer implements CommandConsumerInterface
 {
     public function __construct(

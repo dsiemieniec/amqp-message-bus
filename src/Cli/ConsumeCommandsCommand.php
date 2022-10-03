@@ -22,8 +22,7 @@ class ConsumeCommandsCommand extends Command
 {
     public function __construct(
         private CommandConsumerInterface $consumer
-    )
-    {
+    ) {
         parent::__construct();
     }
 
@@ -49,7 +48,7 @@ class ConsumeCommandsCommand extends Command
             $output->writeln(\sprintf('Consuming %s...', $name));
 
             $this->consumer->consume($name, $limits);
-        } catch (MessageLimitException|TimeLimitException|AMQPTimeoutException $exception) {
+        } catch (MessageLimitException | TimeLimitException | AMQPTimeoutException $exception) {
             $io->warning($exception->getMessage());
         } catch (Throwable $exception) {
             $io->error($exception->getMessage());
