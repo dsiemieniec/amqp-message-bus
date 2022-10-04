@@ -8,6 +8,7 @@ use App\Exception\HandlerRegistryException;
 use App\Handler\HandlerRegistry;
 use App\Kernel;
 use ReflectionNamedType;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -15,7 +16,7 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class HandlerRegistryCompilerPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         $handlerRegistryDefinition = $container->findDefinition(HandlerRegistry::class);
 
@@ -23,7 +24,7 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
         foreach ($handlerIds as $handlerId => $tags) {
             $handlerRegistryDefinition
                 ->addMethodCall('registerHandler', [
-                    $this->getCommandClass($container, $handlerId),
+                    $this->getCommandClass($container, (string)$handlerId),
                     new Reference($handlerId)
                 ]);
         }
@@ -40,14 +41,26 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
                 continue;
             }
 
-            return $definition->getClass();
+            $handlerClass = $definition->getClass();
+            if ($handlerClass === null) {
+                throw new RuntimeException(
+                    \sprintf('Could not establish class of %s during compiler pass', $handlerId)
+                );
+            }
+
+            return $handlerClass;
         }
     }
 
-    private function getCommandClass(ContainerBuilder $container, int|string $handlerId): string
+    private function getCommandClass(ContainerBuilder $container, string $handlerId): string
     {
         $handlerClass = $this->getHandlerClass($container, $handlerId);
         $reflectionClass = $container->getReflectionClass($handlerClass);
+        if ($reflectionClass === null) {
+            throw new RuntimeException(
+                \sprintf('Could not create ReflectionClass of %s during  compiler pass', $handlerClass)
+            );
+        }
         if (!$reflectionClass->hasMethod('__invoke')) {
             throw new HandlerRegistryException(
                 \sprintf('__invoke method not implemented in %s', $handlerClass)

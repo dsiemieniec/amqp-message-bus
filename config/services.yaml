@@ -22,14 +22,6 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    _instanceof:
-        App\Serializer\CommandSerializerInterface:
-            tags: ['app.command_serializer']
-
-    App\Serializer\CommandSerializerRegistry:
-        arguments:
-            - !tagged_iterator app.command_serializer
-
     App\Config\ConfigFactory:
         arguments:
             - '%kernel.project_dir%/config/services/async_command_bus.yaml'

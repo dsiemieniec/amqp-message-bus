@@ -6,19 +6,14 @@ namespace App\Serializer;
 
 use App\Exception\MissingSerializerException;
 
-class CommandSerializerRegistry
+final class CommandSerializerRegistry
 {
     /** @var array<string, CommandSerializerInterface> */
     private array $serializers;
 
-    /**
-     * @param CommandSerializerInterface[] $serializers
-     */
-    public function __construct(iterable $serializers)
+    public function registerSerializer(string $serializerClass, CommandSerializerInterface $serializer): void
     {
-        foreach ($serializers as $serializer) {
-            $this->serializers[\get_class($serializer)] = $serializer;
-        }
+        $this->serializers[$serializerClass] = $serializer;
     }
 
     public function getSerializer(string $serializerClass): CommandSerializerInterface
