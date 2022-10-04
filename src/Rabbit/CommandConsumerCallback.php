@@ -8,13 +8,13 @@ use App\Command\CommandBusInterface;
 use App\Rabbit\Message\MessageEnvelope\MessageEnvelope;
 use App\Rabbit\Message\MessageEnvelopeInterface;
 use App\Rabbit\Message\PropertyKey;
-use App\Serializer\CommandSerializerInterface;
+use App\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
 
 class CommandConsumerCallback implements ConsumerCallbackInterface
 {
     public function __construct(
-        private CommandSerializerInterface $serializer,
+        private Serializer $serializer,
         private CommandBusInterface $commandBus
     ) {
     }
@@ -32,10 +32,12 @@ class CommandConsumerCallback implements ConsumerCallbackInterface
 
     private function transformMessage(AMQPMessage $message): MessageEnvelopeInterface
     {
-        $builder = MessageEnvelope::builder($message->getBody());
-
         $properties = $message->get_properties();
-        $builder->type($properties[PropertyKey::Type->value] ?? '');
+
+        $builder = MessageEnvelope::builder(
+            $message->getBody(),
+            $properties[PropertyKey::Type->value] ?? ''
+        );
 
         return $builder->build();
     }

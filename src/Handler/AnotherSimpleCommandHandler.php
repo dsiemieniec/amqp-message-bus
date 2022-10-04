@@ -10,6 +10,10 @@ final class AnotherSimpleCommandHandler implements HandlerInterface
 {
     public function __invoke(AnotherSimpleCommand $command): void
     {
-        print_r(['text1' => $command->getFirstText(), 'text2' => $command->getSecondText()]);
+        print_r([
+            'text1' => $command->getFirstText(),
+            'text2' => $command->getSecondText(),
+            'dateTime' => $command->getDateTime()->format(DATE_ISO8601)
+        ]);
     }
 }

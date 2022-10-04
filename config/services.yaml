@@ -25,10 +25,16 @@ services:
     _instanceof:
         App\Handler\HandlerInterface:
             tags: ['app.command_handler']
+        App\Serializer\CommandSerializerInterface:
+            tags: ['app.command_serializer']
 
     App\Handler\HandlerRegistry:
         arguments:
             - !tagged_iterator app.command_handler
+
+    App\Serializer\CommandSerializerRegistry:
+        arguments:
+            - !tagged_iterator app.command_serializer
 
     App\Config\ConfigFactory:
         arguments:

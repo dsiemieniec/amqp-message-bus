@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use DateTimeInterface;
+
 class AnotherSimpleCommand implements CommandInterface
 {
     public function __construct(
         private string $firstText,
-        private string $secondText
+        private string $secondText,
+        private DateTimeInterface $dateTime
     ) {
     }
 
@@ -20,5 +23,10 @@ class AnotherSimpleCommand implements CommandInterface
     public function getSecondText(): string
     {
         return $this->secondText;
+    }
+
+    public function getDateTime(): DateTimeInterface
+    {
+        return $this->dateTime;
     }
 }

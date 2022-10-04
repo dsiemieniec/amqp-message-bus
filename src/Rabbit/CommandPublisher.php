@@ -9,7 +9,7 @@ use App\Config\Config;
 use App\Config\Connection as ConnectionConfig;
 use App\Rabbit\Message\MessageEnvelopeInterface;
 use App\Rabbit\Message\PropertyKey;
-use App\Serializer\CommandSerializerInterface;
+use App\Serializer\Serializer;
 use App\Utils\Delay;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -23,7 +23,7 @@ class CommandPublisher implements CommandPublisherInterface
 
     public function __construct(
         private Config $config,
-        private CommandSerializerInterface $serializer
+        private Serializer $serializer
     ) {
     }
 
@@ -60,6 +60,8 @@ class CommandPublisher implements CommandPublisherInterface
                 $properties[$property->getKey()->value] = $property->getPropertyValueAsString();
             }
         }
+
+        $properties[PropertyKey::Type->value] = $envelope->getCommandClass();
 
         if ($delay !== null) {
             $headers[] = ['x-delay' => $delay->getValue()];

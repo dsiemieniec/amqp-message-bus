@@ -21,9 +21,10 @@ class ConfigFactory
         $exchanges = $this->readExchanges($yaml, $connections);
         $queues = $this->readQueues($yaml, $connections);
         $bindings = $this->readBindings($yaml, $exchanges, $queues);
-        $commands = $this->readCommands($yaml, $exchanges, $queues);
+        $commands = $this->readCommandPublishers($yaml, $exchanges, $queues);
+        $serializers = $this->readCommandSerializers($yaml);
 
-        return new Config($exchanges, $queues, $bindings, $commands);
+        return new Config($exchanges, $queues, $bindings, $commands, $serializers);
     }
 
     /**
@@ -124,8 +125,11 @@ class ConfigFactory
      * @param array<string, mixed> $yaml
      * @throws Exception
      */
-    private function readCommands(array $yaml, ExchangesMap $exchanges, QueuesMap $queues): CommandPublisherConfigsMap
-    {
+    private function readCommandPublishers(
+        array $yaml,
+        ExchangesMap $exchanges,
+        QueuesMap $queues
+    ): CommandPublisherConfigsMap {
         $map = new CommandPublisherConfigsMap();
         foreach ($yaml['commands'] ?? [] as $class => $params) {
             $commandConfig = null;
@@ -142,6 +146,22 @@ class ConfigFactory
             }
 
             $map->put($commandConfig ?? new QueuePublishedCommandConfig($class, $queues->get('default')));
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param array<string, mixed> $yaml
+     */
+    private function readCommandSerializers(array $yaml): CommandSerializersMap
+    {
+        $map = new CommandSerializersMap();
+        foreach ($yaml['commands'] ?? [] as $commandClass => $params) {
+            $serializerClass = $params['serializer'] ?? null;
+            if ($serializerClass !== null) {
+                $map->put(new CommandSerializer($commandClass, $serializerClass));
+            }
         }
 
         return $map;

@@ -14,14 +14,15 @@ final class MessageEnvelope implements MessageEnvelopeInterface
 
     public function __construct(
         private Stringable|string $body,
+        private string $commandClass,
         ?PublisherProperties $properties = null
     ) {
         $this->properties = $properties ?: new PublisherProperties();
     }
 
-    public static function builder(Stringable|string $body): MessageEnvelopeBuilder
+    public static function builder(Stringable|string $body, string $commandClass): MessageEnvelopeBuilder
     {
-        return new MessageEnvelopeBuilder($body);
+        return new MessageEnvelopeBuilder($body, $commandClass);
     }
 
     public function getBody(): Stringable|string
@@ -32,5 +33,10 @@ final class MessageEnvelope implements MessageEnvelopeInterface
     public function getProperties(): PublisherProperties
     {
         return $this->properties;
+    }
+
+    public function getCommandClass(): string
+    {
+        return $this->commandClass;
     }
 }

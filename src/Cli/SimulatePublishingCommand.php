@@ -10,6 +10,7 @@ use App\Command\CommandInterface;
 use App\Command\DispatchedToOwnQueueCommand;
 use App\Command\SimpleCommand;
 use App\Utils\Delay;
+use DateTimeImmutable;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -61,7 +62,11 @@ class SimulatePublishingCommand extends Command
         if ($i === 0) {
             return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
         } elseif ($i === 1) {
-            return new AnotherSimpleCommand(\uniqid('', true), \uniqid('', true));
+            return new AnotherSimpleCommand(
+                \uniqid('', true),
+                \uniqid('', true),
+                new DateTimeImmutable()
+            );
         }
 
         return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));

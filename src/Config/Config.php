@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Serializer\DefaultCommandSerializer;
+
 class Config
 {
     public function __construct(
         private ExchangesMap $exchanges,
         private QueuesMap $queues,
         private BindingsMap $bindings,
-        private CommandPublisherConfigsMap $commandPublisherConfigs
+        private CommandPublisherConfigsMap $commandPublisherConfigs,
+        private CommandSerializersMap $commandSerializersMap
     ) {
     }
 
@@ -23,6 +26,18 @@ class Config
         }
 
         return $this->commandPublisherConfigs->get($commandClass);
+    }
+
+    public function getCommandSerializerConfig(string $commandClass): CommandSerializer
+    {
+        $config = $this->commandSerializersMap->get($commandClass);
+        if ($config === null) {
+            $config = new CommandSerializer($commandClass, DefaultCommandSerializer::class);
+
+            $this->commandSerializersMap->put($config);
+        }
+
+        return $config;
     }
 
     public function getQueueConfig(string $name): Queue

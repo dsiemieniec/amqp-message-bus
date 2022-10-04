@@ -17,7 +17,8 @@ final class MessageEnvelopeBuilder
     private HeadersBuilder $headersBuilder;
 
     public function __construct(
-        private Stringable|string $body
+        private Stringable|string $body,
+        private string $commandClass
     ) {
         $this->propertiesBuilder = PublisherProperties::builder();
         $this->headersBuilder = Headers::builder();
@@ -29,6 +30,7 @@ final class MessageEnvelopeBuilder
 
         return new MessageEnvelope(
             $this->body,
+            $this->commandClass,
             $this->propertiesBuilder->build()
         );
     }
