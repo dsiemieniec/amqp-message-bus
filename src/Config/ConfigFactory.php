@@ -6,34 +6,45 @@ namespace App\Config;
 
 use Exception;
 
-class ConfigFactory
+final class ConfigFactory
 {
+    private ConnectionsMap $connections;
+    private ExchangesMap $exchanges;
+    private QueuesMap $queues;
+    private BindingsMap $bindings;
+    private CommandPublisherConfigsMap $publishers;
+    private CommandSerializersMap $serializers;
+
     public function __construct(
         private array $config
     ) {
-    }
-
-    public function create(): Config
-    {
-        $yaml = $this->config;
-        $connections = $this->readConnections($yaml);
-        $exchanges = $this->readExchanges($yaml, $connections);
-        $queues = $this->readQueues($yaml, $connections);
-        $bindings = $this->readBindings($yaml, $exchanges, $queues);
-        $commands = $this->readCommandPublishers($yaml, $exchanges, $queues);
-        $serializers = $this->readCommandSerializers($yaml);
-
-        return new Config($exchanges, $queues, $bindings, $commands, $serializers);
+        $this->connections = new ConnectionsMap();
+        $this->exchanges = new ExchangesMap();
+        $this->queues = new QueuesMap();
+        $this->bindings = new BindingsMap();
+        $this->publishers = new CommandPublisherConfigsMap();
+        $this->serializers = new CommandSerializersMap();
     }
 
     /**
-     * @param array<string, mixed> $yaml
+     * @throws Exception
      */
-    private function readConnections(array $yaml): ConnectionsMap
+    public function create(): Config
     {
-        $map = new ConnectionsMap();
-        foreach ($yaml['connections'] ?? [] as $name => $params) {
-            $map->put(
+        $this->readConnections();
+        $this->readExchanges();
+        $this->readQueues();
+        $this->readBindings();
+        $this->readCommandPublishers();
+        $this->readCommandSerializers();
+
+        return new Config($this->exchanges, $this->queues, $this->bindings, $this->publishers, $this->serializers);
+    }
+
+    private function readConnections(): void
+    {
+        foreach ($this->config['connections'] ?? [] as $name => $params) {
+            $this->connections->put(
                 new Connection(
                     $name,
                     $params['host'],
@@ -44,50 +55,38 @@ class ConfigFactory
                 )
             );
         }
-
-        return $map;
     }
 
-    /**
-     * @param array<string, mixed> $yaml
-     */
-    private function readExchanges(array $yaml, ConnectionsMap $connections): ExchangesMap
+    private function readExchanges(): void
     {
-        $map = new ExchangesMap();
-        foreach ($yaml['exchanges'] ?? [] as $name => $params) {
-            $map->put(
+        foreach ($this->config['exchanges'] ?? [] as $name => $params) {
+            $this->exchanges->put(
                 $name,
                 new Exchange(
                     $params['name'],
                     ExchangeType::from($params['type']),
-                    $connections->get($params['connection']),
+                    $this->connections->get($params['connection']),
                     (bool)($params['delayed_active'] ?? false)
                 )
             );
         }
-
-        return $map;
     }
 
-    /**
-     * @param array<string, mixed> $yaml
-     */
-    private function readQueues(array $yaml, ConnectionsMap $connections): QueuesMap
+    private function readQueues(): void
     {
-        $map = new QueuesMap();
-        $map->put(
+        $this->queues->put(
             'default',
             new Queue(
                 'async_command_bus',
-                $connections->get('default')
+                $this->connections->get('default')
             )
         );
-        foreach ($yaml['queues'] ?? [] as $name => $params) {
-            $map->put(
+        foreach ($this->config['queues'] ?? [] as $name => $params) {
+            $this->queues->put(
                 $name,
                 new Queue(
                     $params['name'],
-                    $connections->get($params['connection']),
+                    $this->connections->get($params['connection']),
                     $params['passive'] ?? false,
                     $params['durable'] ?? false,
                     $params['exclusive'] ?? false,
@@ -95,74 +94,53 @@ class ConfigFactory
                 )
             );
         }
-
-        return $map;
     }
 
     /**
-     * @param array<string, mixed> $yaml
      * @throws Exception
      */
-    private function readBindings(array $yaml, ExchangesMap $exchanges, QueuesMap $queues): BindingsMap
+    private function readBindings(): void
     {
-        $map = new BindingsMap();
-        foreach ($yaml['bindings'] ?? [] as $name => $params) {
-            $map->put(
+        foreach ($this->config['bindings'] ?? [] as $name => $params) {
+            $this->bindings->put(
                 $name,
                 new Binding(
-                    $queues->get($params['queue']),
-                    $exchanges->get($params['exchange']),
+                    $this->queues->get($params['queue']),
+                    $this->exchanges->get($params['exchange']),
                     $params['routing_key'] ?? ''
                 )
             );
         }
-
-        return $map;
     }
 
-    /**
-     * @param array<string, mixed> $yaml
-     * @throws Exception
-     */
-    private function readCommandPublishers(
-        array $yaml,
-        ExchangesMap $exchanges,
-        QueuesMap $queues
-    ): CommandPublisherConfigsMap {
-        $map = new CommandPublisherConfigsMap();
-        foreach ($yaml['commands'] ?? [] as $class => $params) {
+    private function readCommandPublishers(): void
+    {
+        foreach ($this->config['commands'] ?? [] as $class => $params) {
             $commandConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
-                $commandConfig = new QueuePublishedCommandConfig($class, $queues->get($publisherConfig['queue']));
+                $commandConfig = new QueuePublishedCommandConfig($class, $this->queues->get($publisherConfig['queue']));
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
                 $commandConfig = new ExchangePublishedCommandConfig(
                     $class,
-                    $exchanges->get($exchangePublisherConfig['name']),
+                    $this->exchanges->get($exchangePublisherConfig['name']),
                     $exchangePublisherConfig['routing_key'] ?? ''
                 );
             }
 
-            $map->put($commandConfig ?? new QueuePublishedCommandConfig($class, $queues->get('default')));
+            $this->publishers
+                ->put($commandConfig ?? new QueuePublishedCommandConfig($class, $this->queues->get('default')));
         }
-
-        return $map;
     }
 
-    /**
-     * @param array<string, mixed> $yaml
-     */
-    private function readCommandSerializers(array $yaml): CommandSerializersMap
+    private function readCommandSerializers(): void
     {
-        $map = new CommandSerializersMap();
-        foreach ($yaml['commands'] ?? [] as $commandClass => $params) {
+        foreach ($this->config['commands'] ?? [] as $commandClass => $params) {
             $serializerClass = $params['serializer'] ?? null;
             if ($serializerClass !== null) {
-                $map->put(new CommandSerializer($commandClass, $serializerClass));
+                $this->serializers->put(new CommandSerializer($commandClass, $serializerClass));
             }
         }
-
-        return $map;
     }
 }
