@@ -4,6 +4,61 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    async_command_bus:
+        connections:
+            default:
+                host: '%env(RABBIT_CONNECTION)%'
+                port: '%env(RABBIT_PORT)%'
+                user: '%env(RABBIT_USER)%'
+                password: '%env(RABBIT_PASSWORD)%'
+            second:
+                host: '%env(RABBIT_CONNECTION)%'
+                port: '%env(RABBIT_PORT)%'
+                user: '%env(RABBIT_USER)%'
+                password: '%env(RABBIT_PASSWORD)%'
+                vhost: 'test_vhost'
+        exchanges:
+            test_exchange_name:
+                connection: second
+                name: test_exchange
+                type: direct
+            delayed_exchange:
+                connection: default
+                name: delayed_exchange
+                type: direct
+                delayed_active: true
+        queues:
+            first_queue_name:
+                connection: default
+                name: first_queue
+            second_queue_name:
+                connection: second
+                name: second_queue
+                passive: false
+                durable: false
+                exclusive: false
+                auto_delete: false
+        bindings:
+            test_binding:
+                queue: second_queue_name
+                exchange: test_exchange_name
+                routing_key: test_routing_key
+            delayed_exchange_binding:
+                queue: first_queue_name
+                exchange: delayed_exchange
+                routing_key: another_simple_command
+        commands:
+            App\Command\AnotherSimpleCommand:
+                serializer: App\Serializer\SampleCommandSerializer
+                publisher:
+                    exchange:
+                        name: delayed_exchange
+                        routing_key: another_simple_command
+            App\Command\DispatchedToOwnQueueCommand:
+                publisher:
+                    exchange:
+                        name: test_exchange_name
+                        routing_key: test_routing_key
 
 services:
     # default configuration for services in *this* file
@@ -24,7 +79,7 @@ services:
     # please note that last definitions always *replace* previous ones
     App\Config\ConfigFactory:
         arguments:
-            - '%kernel.project_dir%/config/services/async_command_bus.yaml'
+            - '%async_command_bus%'
 
     App\Config\Config:
         factory: ['@App\Config\ConfigFactory', 'create']

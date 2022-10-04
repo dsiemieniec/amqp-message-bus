@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace App\Config;
 
 use Exception;
-use Symfony\Component\Yaml\Yaml;
 
 class ConfigFactory
 {
     public function __construct(
-        private string $filePath
+        private array $config
     ) {
     }
 
     public function create(): Config
     {
-        $yaml = Yaml::parseFile($this->filePath)['async_command_bus'] ?? [];
+        $yaml = $this->config;
         $connections = $this->readConnections($yaml);
         $exchanges = $this->readExchanges($yaml, $connections);
         $queues = $this->readQueues($yaml, $connections);
