@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Serializer\DefaultCommandSerializer;
 use Exception;
 
 final class ConfigFactory
@@ -12,9 +13,11 @@ final class ConfigFactory
     private ExchangesMap $exchanges;
     private QueuesMap $queues;
     private BindingsMap $bindings;
-    private CommandPublisherConfigsMap $publishers;
-    private CommandSerializersMap $serializers;
+    private CommandConfigsMap $commands;
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(
         private array $config
     ) {
@@ -22,8 +25,7 @@ final class ConfigFactory
         $this->exchanges = new ExchangesMap();
         $this->queues = new QueuesMap();
         $this->bindings = new BindingsMap();
-        $this->publishers = new CommandPublisherConfigsMap();
-        $this->serializers = new CommandSerializersMap();
+        $this->commands = new CommandConfigsMap();
     }
 
     /**
@@ -36,9 +38,8 @@ final class ConfigFactory
         $this->readQueues();
         $this->readBindings();
         $this->readCommandPublishers();
-        $this->readCommandSerializers();
 
-        return new Config($this->exchanges, $this->queues, $this->bindings, $this->publishers, $this->serializers);
+        return new Config($this->exchanges, $this->queues, $this->bindings, $this->commands);
     }
 
     private function readConnections(): void
@@ -116,31 +117,31 @@ final class ConfigFactory
     private function readCommandPublishers(): void
     {
         foreach ($this->config['commands'] ?? [] as $class => $params) {
-            $commandConfig = null;
+            $publisherConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
-                $commandConfig = new QueuePublishedCommandConfig($class, $this->queues->get($publisherConfig['queue']));
+                $publisherConfig = new QueuePublishedCommandConfig($this->queues->get($publisherConfig['queue']));
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
-                $commandConfig = new ExchangePublishedCommandConfig(
-                    $class,
+                $publisherConfig = new ExchangePublishedCommandConfig(
                     $this->exchanges->get($exchangePublisherConfig['name']),
                     $exchangePublisherConfig['routing_key'] ?? ''
                 );
             }
 
-            $this->publishers
-                ->put($commandConfig ?? new QueuePublishedCommandConfig($class, $this->queues->get('default')));
-        }
-    }
-
-    private function readCommandSerializers(): void
-    {
-        foreach ($this->config['commands'] ?? [] as $commandClass => $params) {
             $serializerClass = $params['serializer'] ?? null;
-            if ($serializerClass !== null) {
-                $this->serializers->put(new CommandSerializer($commandClass, $serializerClass));
+            if ($serializerClass === null) {
+                $serializerClass = DefaultCommandSerializer::class;
             }
+
+            $this->commands
+                ->put(
+                    new CommandConfig(
+                        $class,
+                        $serializerClass,
+                        $publisherConfig ?? new QueuePublishedCommandConfig($this->queues->get('default'))
+                    )
+                );
         }
     }
 }

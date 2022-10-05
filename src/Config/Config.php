@@ -12,32 +12,23 @@ class Config
         private ExchangesMap $exchanges,
         private QueuesMap $queues,
         private BindingsMap $bindings,
-        private CommandPublisherConfigsMap $commandPublisherConfigs,
-        private CommandSerializersMap $commandSerializersMap
+        private CommandConfigsMap $commandConfigsMap
     ) {
     }
 
-    public function getCommandPublisherConfig(string $commandClass): CommandPublisherConfig
+    public function getCommandConfig(string $commandClass): CommandConfig
     {
-        if (!$this->commandPublisherConfigs->exists($commandClass)) {
-            $this->commandPublisherConfigs->put(
-                new QueuePublishedCommandConfig($commandClass, $this->queues->get('default'))
+        if (!$this->commandConfigsMap->exists($commandClass)) {
+            $this->commandConfigsMap->put(
+                new CommandConfig(
+                    $commandClass,
+                    DefaultCommandSerializer::class,
+                    new QueuePublishedCommandConfig($this->queues->get('default'))
+                )
             );
         }
 
-        return $this->commandPublisherConfigs->get($commandClass);
-    }
-
-    public function getCommandSerializerConfig(string $commandClass): CommandSerializer
-    {
-        $config = $this->commandSerializersMap->get($commandClass);
-        if ($config === null) {
-            $config = new CommandSerializer($commandClass, DefaultCommandSerializer::class);
-
-            $this->commandSerializersMap->put($config);
-        }
-
-        return $config;
+        return $this->commandConfigsMap->get($commandClass);
     }
 
     public function getQueueConfig(string $name): Queue

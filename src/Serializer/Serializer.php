@@ -29,7 +29,7 @@ final class Serializer
     private function getSerializer(string $commandClass): CommandSerializerInterface
     {
         return $this->registry->getSerializer(
-            $this->config->getCommandSerializerConfig($commandClass)->getSerializerClass()
+            $this->config->getCommandConfig($commandClass)->getSerializerClass()
         );
     }
 }

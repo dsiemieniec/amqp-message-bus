@@ -6,9 +6,9 @@ namespace App\Config;
 
 use App\Exception\MissingMapItemException;
 
-class CommandPublisherConfigsMap
+class CommandConfigsMap
 {
-    /** @var array<string, CommandPublisherConfig> */
+    /** @var array<string, CommandConfig> */
     private array $commands;
 
     public function __construct()
@@ -16,12 +16,12 @@ class CommandPublisherConfigsMap
         $this->commands = [];
     }
 
-    public function put(CommandPublisherConfig $config): void
+    public function put(CommandConfig $config): void
     {
         $this->commands[$config->getCommandClass()] = $config;
     }
 
-    public function get(string $commandClass): CommandPublisherConfig
+    public function get(string $commandClass): CommandConfig
     {
         if (!$this->exists($commandClass)) {
             throw new MissingMapItemException('Missing command config for ' . $commandClass);

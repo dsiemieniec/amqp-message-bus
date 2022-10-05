@@ -33,7 +33,7 @@ class CommandPublisher implements CommandPublisherInterface
             $this->serializer->serialize($command),
             $delay
         );
-        $publisherConfig = $this->config->getCommandPublisherConfig(\get_class($command));
+        $publisherConfig = $this->config->getCommandConfig(\get_class($command))->getPublisherConfig();
         $this->getConnection($publisherConfig->getConnection())->publish(
             $message,
             $publisherConfig->getPublisherTarget()

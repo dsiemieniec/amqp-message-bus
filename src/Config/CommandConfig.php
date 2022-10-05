@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-class CommandSerializer
+class CommandConfig
 {
     public function __construct(
         private string $commandClass,
-        private string $serializerClass
+        private string $serializerClass,
+        private CommandPublisherConfig $publisherConfig
     ) {
     }
 
@@ -20,5 +21,10 @@ class CommandSerializer
     public function getSerializerClass(): string
     {
         return $this->serializerClass;
+    }
+
+    public function getPublisherConfig(): CommandPublisherConfig
+    {
+        return $this->publisherConfig;
     }
 }
