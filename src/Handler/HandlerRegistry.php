@@ -32,7 +32,11 @@ final class HandlerRegistry implements HandlerRegistryInterface
 
     public function getHandler(CommandInterface $command): HandlerInterface
     {
-        $commandClass = \get_class($command);
+        return $this->getHandlerByClass(\get_class($command));
+    }
+
+    public function getHandlerByClass(string $commandClass): HandlerInterface
+    {
         if (!isset($this->registry[$commandClass])) {
             throw new HandlerMissingException(\sprintf('Handler not registered for command %s', $commandClass));
         }

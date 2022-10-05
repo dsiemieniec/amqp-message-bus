@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DependencyInjection;
 
+use App\Cli\DebugCommandsConfigCommand;
 use App\Exception\HandlerRegistryException;
 use App\Handler\HandlerRegistry;
 use App\Kernel;

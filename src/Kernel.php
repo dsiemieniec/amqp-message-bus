@@ -3,6 +3,7 @@
 namespace App;
 
 use App\DependencyInjection\CommandSerializerRegistryCompilerPass;
+use App\DependencyInjection\DebugConfigCommandCompilerPass;
 use App\DependencyInjection\HandlerRegistryCompilerPass;
 use App\Handler\HandlerInterface;
 use App\Serializer\CommandSerializerInterface;
@@ -28,5 +29,6 @@ class Kernel extends BaseKernel
 
         $container->addCompilerPass(new HandlerRegistryCompilerPass());
         $container->addCompilerPass(new CommandSerializerRegistryCompilerPass());
+        $container->addCompilerPass(new DebugConfigCommandCompilerPass());
     }
 }

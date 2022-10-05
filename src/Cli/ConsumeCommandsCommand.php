@@ -30,7 +30,7 @@ class ConsumeCommandsCommand extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('name', InputOption::VALUE_REQUIRED, '', 'default');
+        $this->addArgument('name', InputOption::VALUE_REQUIRED, 'Queue name', 'default');
         $this->addOption('time-limit', null, InputOption::VALUE_OPTIONAL, 'Consumer time limit in seconds', 0);
         $this->addOption('timeout', null, InputOption::VALUE_OPTIONAL, 'Consumer timeout limit in seconds', 0);
         $this->addOption('message-limit', null, InputOption::VALUE_OPTIONAL, 'Consumed messages limit', 0);
