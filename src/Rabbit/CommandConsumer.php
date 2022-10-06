@@ -4,20 +4,26 @@ declare(strict_types=1);
 
 namespace App\Rabbit;
 
-use App\Config\Config;
+use App\Config\Queue;
 
 class CommandConsumer implements CommandConsumerInterface
 {
+    private RabbitConnection $connection;
+
     public function __construct(
-        private Config $config,
+        private Queue $queueConfig,
         private ConsumerCallbackInterface $callback
     ) {
+        $this->connection = new RabbitConnection($queueConfig->getConnection());
     }
 
-    public function consume(string $name, ConsumerLimits $limits): void
+    public function consume(ConsumerLimits $limits): void
     {
-        $queueConfig = $this->config->getQueueConfig($name);
-        $connection = new RabbitConnection($queueConfig->getConnection());
-        $connection->consume(new ConsumerParameters($queueConfig, $limits), $this->callback);
+        $this->connection->consume(new ConsumerParameters($this->queueConfig, $limits), $this->callback);
+    }
+
+    public function stop(): void
+    {
+        $this->connection->stopConsumer();
     }
 }

@@ -20,6 +20,7 @@ class RabbitConnection implements ConnectionInterface
 {
     private AMQPStreamConnection $connection;
     private AMQPChannel $channel;
+    private bool $consumerStopped = false;
 
     public function __construct(Connection $connectionConfig)
     {
@@ -92,6 +93,7 @@ class RabbitConnection implements ConnectionInterface
 
     public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void
     {
+        $this->consumerStopped = false;
         $this->channel->basic_consume(
             $parameters->getQueue()->getName(),
             $parameters->getTag(),
@@ -106,14 +108,14 @@ class RabbitConnection implements ConnectionInterface
         $limits = $parameters->getLimits();
         $startedAt = time();
         $i = 0;
-        while ($this->channel->is_open()) {
+        while ($this->channel->is_open() && !$this->consumerStopped) {
             $timeout = $this->calculateTimeout($startedAt, $limits);
             if ($timeout <= 1) {
-                $this->channel->stopConsume();
+                $this->stopConsumer();
             }
             $this->channel->wait(null, false, $timeout);
             if ($limits->hasMessagesLimit() && ++$i >= $limits->getMessagesLimit()) {
-                $this->channel->stopConsume();
+                $this->stopConsumer();
                 throw new MessageLimitException($limits->getMessagesLimit());
             }
             if ($this->timeLimitExceeded($startedAt, $limits)) {
@@ -141,5 +143,11 @@ class RabbitConnection implements ConnectionInterface
     private function timeLimitExceeded(int $startedAt, ConsumerLimits $limits): bool
     {
         return $limits->hasTimeLimit() && \time() >= $startedAt + $limits->getTimeLimit();
+    }
+
+    public function stopConsumer(): void
+    {
+        $this->channel->stopConsume();
+        $this->consumerStopped = true;
     }
 }

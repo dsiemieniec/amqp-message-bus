@@ -15,7 +15,8 @@
         "symfony/property-access": "6.1.*",
         "symfony/runtime": "6.1.*",
         "symfony/serializer": "6.1.*",
-        "symfony/yaml": "6.1.*"
+        "symfony/yaml": "6.1.*",
+        "ext-pcntl": "*"
     },
     "config": {
         "allow-plugins": {

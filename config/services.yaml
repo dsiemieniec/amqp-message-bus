@@ -38,6 +38,9 @@ parameters:
                 durable: false
                 exclusive: false
                 auto_delete: false
+            long_running:
+                connection: default
+                name: long_running
         bindings:
             test_binding:
                 queue: second_queue_name
@@ -59,6 +62,9 @@ parameters:
                     exchange:
                         name: test_exchange_name
                         routing_key: test_routing_key
+            App\Command\LongRunningCommand:
+                publisher:
+                    queue: long_running
 
 services:
     # default configuration for services in *this* file

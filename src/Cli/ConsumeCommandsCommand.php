@@ -6,7 +6,8 @@ namespace App\Cli;
 
 use App\Exception\MessageLimitException;
 use App\Exception\TimeLimitException;
-use App\Rabbit\CommandConsumerInterface;
+use App\Rabbit\CommandConsumer;
+use App\Rabbit\CommandConsumerFactory;
 use App\Rabbit\ConsumerLimits;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,10 +23,18 @@ use Throwable;
 )]
 class ConsumeCommandsCommand extends Command
 {
+    private CommandConsumer $consumer;
+    private string $name;
+
     public function __construct(
-        private CommandConsumerInterface $consumer
+        private CommandConsumerFactory $consumerFactory
     ) {
         parent::__construct();
+
+        $callable = fn(int $signalNumber) => $this->onShutdown($signalNumber);
+        \pcntl_signal(SIGINT, $callable);
+        \pcntl_signal(SIGQUIT, $callable);
+        \pcntl_signal(SIGTERM, $callable);
     }
 
     protected function configure(): void
@@ -46,10 +55,12 @@ class ConsumeCommandsCommand extends Command
                 (int)$input->getOption('message-limit')
             );
 
-            $name = $input->getArgument('name');
-            $output->writeln(\sprintf('Consuming %s...', $name));
+            $this->name = $input->getArgument('name');
+            $output->writeln(\sprintf('Starting %s consumer...', $this->name));
 
-            $this->consumer->consume($name, $limits);
+            $this->consumer = $this->consumerFactory->create($this->name);
+
+            $this->consumer->consume($limits);
         } catch (MessageLimitException | TimeLimitException | AMQPTimeoutException $exception) {
             $io->warning($exception->getMessage());
         } catch (Throwable $exception) {
@@ -59,5 +70,16 @@ class ConsumeCommandsCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function onShutdown(int $signalNumber): void
+    {
+        $signals = [SIGINT => 'SIGINT', SIGQUIT => 'SIGQUIT', SIGTERM => 'SIGTERM'];
+        echo \sprintf(
+            '%s received. %s consumer will stop after handling current command',
+            $signals[$signalNumber],
+            $this->name
+        ) . PHP_EOL;
+        $this->consumer->stop();
     }
 }
