@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Rabbit;
 
 use App\Command\CommandBusInterface;
+use App\Exception\CommandBusException;
 use App\Rabbit\Message\MessageEnvelope\MessageEnvelope;
 use App\Rabbit\Message\MessageEnvelopeInterface;
 use App\Rabbit\Message\PropertyKey;
 use App\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
 
-class CommandConsumerCallback implements ConsumerCallbackInterface
+final class CommandConsumerCallback implements ConsumerCallbackInterface
 {
     public function __construct(
         private Serializer $serializer,
@@ -21,13 +22,18 @@ class CommandConsumerCallback implements ConsumerCallbackInterface
 
     public function onMessage(AMQPMessage $message, ConnectionInterface $connection): void
     {
-        $this->commandBus->execute(
-            $this->serializer->deserialize(
-                $this->transformMessage($message)
-            )
-        );
+        try {
+            $this->commandBus->execute(
+                $this->serializer->deserialize(
+                    $this->transformMessage($message)
+                )
+            );
 
-        $connection->ack($message);
+            $connection->ack($message);
+        } catch (CommandBusException $exception) {
+            echo $exception->getMessage() . PHP_EOL;
+            $connection->nack($message, true);
+        }
     }
 
     private function transformMessage(AMQPMessage $message): MessageEnvelopeInterface

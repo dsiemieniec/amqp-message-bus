@@ -18,5 +18,5 @@ interface ConnectionInterface
     public function publish(AMQPMessage $msg, PublisherTarget $target): void;
     public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void;
     public function ack(AMQPMessage $msg): void;
-    public function nack(AMQPMessage $msg): void;
+    public function nack(AMQPMessage $msg, bool $requeue): void;
 }

@@ -8,8 +8,9 @@ use App\Exception\CommandBusException;
 use App\Handler\HandlerRegistryInterface;
 use App\Rabbit\CommandPublisherInterface;
 use App\Utils\Delay;
+use Throwable;
 
-class CommandBus implements CommandBusInterface
+final class CommandBus implements CommandBusInterface
 {
     public function __construct(
         private HandlerRegistryInterface $handlerRegistry,
@@ -21,14 +22,24 @@ class CommandBus implements CommandBusInterface
     {
         $handler = $this->handlerRegistry->getHandler($command);
         if (!\is_callable($handler)) {
-            throw new CommandBusException(\sprintf('%s is not callable', \get_class($handler)));
+            throw new CommandBusException(\sprintf('%s is not callable', \get_class($handler)), $command);
         }
 
-        $handler($command);
+        try {
+            $handler($command);
+        } catch (Throwable $throwable) {
+            throw new CommandBusException(
+                \sprintf('%s failed to process command', \get_class($handler)), $command, $throwable
+            );
+        }
     }
 
     public function executeAsync(CommandInterface $command, ?Delay $delay = null): void
     {
-        $this->commandPublisher->publish($command, $delay);
+        try {
+            $this->commandPublisher->publish($command, $delay);
+        } catch (Throwable $throwable) {
+            throw new CommandBusException('Failed to publish command', $command, $throwable);
+        }
     }
 }
