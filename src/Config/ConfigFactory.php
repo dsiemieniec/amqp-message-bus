@@ -75,7 +75,6 @@ final class ConfigFactory
 
     private function readQueues(): void
     {
-
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $this->queues->put(
                 $name,

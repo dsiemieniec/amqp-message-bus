@@ -98,4 +98,56 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $defaultQueueConnection->getPassword());
         self::assertEquals('/', $defaultQueueConnection->getVHost());
     }
+
+    public function testShouldDefineCommandPublishedToCustomQueue(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ],
+                'second' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest',
+                    'vhost' => 'test_vhost'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'connection' => 'second',
+                    'name' => 'custom_queue'
+                ]
+            ],
+            'commands' => [
+                'TestCommand' => [
+                    'serializer' => 'TestCommandSerializer',
+                    'publisher' => [
+                        'queue' => 'custom_queue_name'
+                    ]
+                ]
+            ]
+        ];
+
+        $config = (new ConfigFactory($data))->create();
+        $commandConfig = $config->getCommandConfig('TestCommand');
+        self::assertEquals('TestCommand', $commandConfig->getCommandClass());
+        self::assertEquals('TestCommandSerializer', $commandConfig->getSerializerClass());
+
+        $publisherConfig = $commandConfig->getPublisherConfig();
+        self::assertEquals('custom_queue', $publisherConfig->getPublisherTarget()->getRoutingKey());
+        self::assertEquals('', $publisherConfig->getPublisherTarget()->getExchange());
+
+        $publisherConnectionConfig = $publisherConfig->getConnection();
+        self::assertEquals('second', $publisherConnectionConfig->getName());
+        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
+        self::assertEquals(5672, $publisherConnectionConfig->getPort());
+        self::assertEquals('guest', $publisherConnectionConfig->getUser());
+        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
+        self::assertEquals('test_vhost', $publisherConnectionConfig->getVHost());
+    }
 }
