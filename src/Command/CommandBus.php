@@ -29,7 +29,9 @@ final class CommandBus implements CommandBusInterface
             $handler($command);
         } catch (Throwable $throwable) {
             throw new CommandBusException(
-                \sprintf('%s failed to process command', \get_class($handler)), $command, $throwable
+                \sprintf('%s failed to process command', \get_class($handler)),
+                $command,
+                $throwable
             );
         }
     }
