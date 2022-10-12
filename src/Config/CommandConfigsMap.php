@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-use App\Exception\MissingMapItemException;
+use App\Exception\MissingCommandConfigException;
 
 class CommandConfigsMap
 {
@@ -23,14 +23,16 @@ class CommandConfigsMap
 
     public function get(string $commandClass): CommandConfig
     {
-        if (!$this->exists($commandClass)) {
-            throw new MissingMapItemException('Missing command config for ' . $commandClass);
+        if (!$this->has($commandClass)) {
+            throw new MissingCommandConfigException(
+                \sprintf('Config has not been defined for command %s', $commandClass)
+            );
         }
 
         return $this->commands[$commandClass];
     }
 
-    public function exists(string $commandClass): bool
+    public function has(string $commandClass): bool
     {
         return \array_key_exists($commandClass, $this->commands);
     }

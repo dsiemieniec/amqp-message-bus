@@ -217,7 +217,6 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals(ExchangeType::DIRECT, $exchange->getType());
     }
 
-
     public function testShouldDefineCommandPublishedToExchangeBoundToCustomQueue(): void
     {
         $data = [
@@ -363,7 +362,6 @@ class ConfigFactoryTest extends TestCase
         self::expectExceptionMessage('Queue custom_queue_name has not been defined');
         (new ConfigFactory($data))->create();
     }
-
 
     public function testShouldThrowExceptionWhenTryingToBindQueueWithNotDefinedExchange(): void
     {

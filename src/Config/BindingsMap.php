@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-use App\Exception\MissingMapItemException;
+use App\Exception\MissingBindingException;
 
 class BindingsMap
 {
@@ -16,6 +16,11 @@ class BindingsMap
         $this->bindings = [];
     }
 
+    public function has(string $name): bool
+    {
+        return \array_key_exists($name, $this->bindings);
+    }
+
     public function put(string $name, Binding $binding): void
     {
         $this->bindings[$name] = $binding;
@@ -23,8 +28,8 @@ class BindingsMap
 
     public function get(string $name): Binding
     {
-        if (!\array_key_exists($name, $this->bindings)) {
-            throw new MissingMapItemException('Missing binding config with name ' . $name);
+        if (!$this->has($name)) {
+            throw new MissingBindingException(\sprintf('Binding %s has not been defined', $name));
         }
 
         return $this->bindings[$name];

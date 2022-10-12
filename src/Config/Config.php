@@ -18,7 +18,7 @@ class Config
 
     public function getCommandConfig(string $commandClass): CommandConfig
     {
-        if (!$this->commandConfigsMap->exists($commandClass)) {
+        if (!$this->commandConfigsMap->has($commandClass)) {
             $this->commandConfigsMap->put(
                 new CommandConfig(
                     $commandClass,
