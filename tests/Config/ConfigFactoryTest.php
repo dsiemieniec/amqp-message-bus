@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Tests\Serializer;
+namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
+use App\Config\ExchangeType;
 use App\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
 
@@ -149,5 +150,66 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getUser());
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('test_vhost', $publisherConnectionConfig->getVHost());
+    }
+
+    public function testShouldDefineCommandPublishedToExchangeBoundToDefaultQueue(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange'
+                ]
+            ],
+            'bindings' => [
+                'test_binding' => [
+                    'queue' => 'default',
+                    'exchange' => 'test_exchange_name',
+                    'routing_key' => 'test_routing_key'
+                ]
+            ],
+            'commands' => [
+                'TestCommand' => [
+                    'publisher' => [
+                        'exchange' => [
+                            'name' => 'test_exchange_name',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $config = (new ConfigFactory($data))->create();
+        $commandConfig = $config->getCommandConfig('TestCommand');
+        self::assertEquals('TestCommand', $commandConfig->getCommandClass());
+        self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
+
+        $publisherConfig = $commandConfig->getPublisherConfig();
+        self::assertEquals('test_routing_key', $publisherConfig->getPublisherTarget()->getRoutingKey());
+        self::assertEquals('test_exchange', $publisherConfig->getPublisherTarget()->getExchange());
+
+        $publisherConnectionConfig = $publisherConfig->getConnection();
+        self::assertEquals('default', $publisherConnectionConfig->getName());
+        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
+        self::assertEquals(5672, $publisherConnectionConfig->getPort());
+        self::assertEquals('guest', $publisherConnectionConfig->getUser());
+        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
+        self::assertEquals('/', $publisherConnectionConfig->getVHost());
+
+        $binding = $config->getAllBindings()[0];
+        self::assertEquals($publisherConnectionConfig, $binding->getConnection());
+        self::assertEquals('async_command_bus', $binding->getQueue()->getName());
+        $exchange = $binding->getExchange();
+        self::assertEquals('test_exchange', $exchange->getName());
+        self::assertFalse($exchange->isDelayedActive());
+        self::assertEquals(ExchangeType::DIRECT, $exchange->getType());
     }
 }

@@ -65,8 +65,8 @@ final class ConfigFactory
                 $name,
                 new Exchange(
                     $params['name'],
-                    ExchangeType::from($params['type']),
-                    $this->connections->get($params['connection']),
+                    ExchangeType::from($params['type'] ?? 'direct'),
+                    $this->connections->get($params['connection'] ?? 'default'),
                     (bool)($params['delayed_active'] ?? false)
                 )
             );
@@ -132,16 +132,11 @@ final class ConfigFactory
                 );
             }
 
-            $serializerClass = $params['serializer'] ?? null;
-            if ($serializerClass === null) {
-                $serializerClass = DefaultCommandSerializer::class;
-            }
-
             $this->commands
                 ->put(
                     new CommandConfig(
                         $class,
-                        $serializerClass,
+                        $params['serializer'] ?? DefaultCommandSerializer::class,
                         $publisherConfig ?? new QueuePublishedCommandConfig($this->queues->get('default'))
                     )
                 );
