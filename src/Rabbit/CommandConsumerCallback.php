@@ -11,12 +11,14 @@ use App\Rabbit\Message\MessageEnvelopeInterface;
 use App\Rabbit\Message\PropertyKey;
 use App\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
+use Psr\Log\LoggerInterface;
 
 final class CommandConsumerCallback implements ConsumerCallbackInterface
 {
     public function __construct(
         private Serializer $serializer,
-        private CommandBusInterface $commandBus
+        private CommandBusInterface $commandBus,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -31,7 +33,7 @@ final class CommandConsumerCallback implements ConsumerCallbackInterface
 
             $connection->ack($message);
         } catch (CommandBusException $exception) {
-            echo $exception->getMessage() . PHP_EOL;
+            $this->logger->error($exception->getMessage());
             $connection->nack($message, true);
         }
     }

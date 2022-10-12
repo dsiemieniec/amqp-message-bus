@@ -9,6 +9,7 @@ use App\Exception\TimeLimitException;
 use App\Rabbit\CommandConsumer;
 use App\Rabbit\CommandConsumerFactory;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,9 +25,11 @@ class ConsumeCommandsCommand extends Command
 {
     private CommandConsumer $consumer;
     private string $name;
+    private SymfonyStyle $io;
 
     public function __construct(
-        private CommandConsumerFactory $consumerFactory
+        private CommandConsumerFactory $consumerFactory,
+        private LoggerInterface $logger
     ) {
         parent::__construct();
 
@@ -43,17 +46,19 @@ class ConsumeCommandsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $this->io = new SymfonyStyle($input, $output);
         try {
             $this->name = $input->getArgument('name');
-            $output->writeln(\sprintf('Starting %s consumer...', $this->name));
+            $this->io->info(\sprintf('Starting %s consumer...', $this->name));
 
             $this->consumer = $this->consumerFactory->create($this->name);
             $this->consumer->consume();
         } catch (MessageLimitException | TimeLimitException | AMQPTimeoutException $exception) {
-            $io->warning($exception->getMessage());
+            $this->io->warning($exception->getMessage());
+            $this->logger->warning($exception->getMessage());
         } catch (Throwable $exception) {
-            $io->error($exception->getMessage());
+            $this->io->error($exception->getMessage());
+            $this->logger->error($exception->getMessage());
 
             return Command::FAILURE;
         }
@@ -64,11 +69,13 @@ class ConsumeCommandsCommand extends Command
     private function onShutdown(int $signalNumber): void
     {
         $signals = [SIGINT => 'SIGINT', SIGQUIT => 'SIGQUIT', SIGTERM => 'SIGTERM'];
-        echo \sprintf(
+        $message = \sprintf(
             '%s received. %s consumer will stop after handling current command',
             $signals[$signalNumber],
             $this->name
-        ) . PHP_EOL;
+        );
+        $this->io->warning($message);
+        $this->logger->warning($message);
         $this->consumer->stop();
     }
 }
