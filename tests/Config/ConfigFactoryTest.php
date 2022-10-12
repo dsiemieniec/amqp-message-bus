@@ -5,6 +5,7 @@ namespace App\Tests\Config;
 use App\Config\ConfigFactory;
 use App\Config\ExchangeType;
 use App\Serializer\DefaultCommandSerializer;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
@@ -278,5 +279,48 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('test_exchange', $exchange->getName());
         self::assertFalse($exchange->isDelayedActive());
         self::assertEquals(ExchangeType::DIRECT, $exchange->getType());
+    }
+
+    public function testShouldThrowExceptionWhenTryingToBindQueueAndExchangeWithDifferentConnections(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ],
+                'second' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest',
+                    'vhost' => 'test_vhost'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'connection' => 'second',
+                    'name' => 'custom_queue'
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange'
+                ]
+            ],
+            'bindings' => [
+                'test_binding' => [
+                    'queue' => 'custom_queue_name',
+                    'exchange' => 'test_exchange_name',
+                    'routing_key' => 'test_routing_key'
+                ]
+            ]
+        ];
+
+        self::expectException(InvalidArgumentException::class);
+        self::expectExceptionMessage('Exchange and queue have different connection settings.');
+        (new ConfigFactory($data))->create();
     }
 }

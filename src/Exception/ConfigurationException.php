@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-use RuntimeException;
+use InvalidArgumentException;
 
-class ConfigurationException extends RuntimeException
+class ConfigurationException extends InvalidArgumentException
 {
 }
