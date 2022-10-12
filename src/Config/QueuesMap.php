@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Exception\MissingQueueException;
 use Exception;
 
 class QueuesMap
@@ -32,7 +33,7 @@ class QueuesMap
     public function get(string $name): Queue
     {
         if (!$this->has($name)) {
-            throw new Exception('Missing queue config with name ' . $name);
+            throw new MissingQueueException(\sprintf('Queue %s has not been defined', $name));
         }
 
         return $this->queues[$name];

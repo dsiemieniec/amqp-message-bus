@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Exception\MissingExchangeException;
 use App\Exception\MissingMapItemException;
 
 class ExchangesMap
@@ -16,6 +17,11 @@ class ExchangesMap
         $this->exchanges = [];
     }
 
+    public function has(string $name): bool
+    {
+        return \array_key_exists($name, $this->exchanges);
+    }
+
     public function put(string $name, Exchange $exchange): void
     {
         $this->exchanges[$name] = $exchange;
@@ -23,8 +29,8 @@ class ExchangesMap
 
     public function get(string $name): Exchange
     {
-        if (!\array_key_exists($name, $this->exchanges)) {
-            throw new MissingMapItemException('Missing exchange config with name ' . $name);
+        if (!$this->has($name)) {
+            throw new MissingExchangeException(\sprintf('Exchange %s has not been defined', $name));
         }
 
         return $this->exchanges[$name];

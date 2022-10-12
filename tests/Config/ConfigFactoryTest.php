@@ -4,6 +4,8 @@ namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
 use App\Config\ExchangeType;
+use App\Exception\MissingExchangeException;
+use App\Exception\MissingQueueException;
 use App\Serializer\DefaultCommandSerializer;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -321,6 +323,74 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(InvalidArgumentException::class);
         self::expectExceptionMessage('Exchange and queue have different connection settings.');
+        (new ConfigFactory($data))->create();
+    }
+
+    public function testShouldThrowExceptionWhenTryingToBindExchangeWithNotDefinedQueue(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ],
+                'second' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest',
+                    'vhost' => 'test_vhost'
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange'
+                ]
+            ],
+            'bindings' => [
+                'test_binding' => [
+                    'queue' => 'custom_queue_name',
+                    'exchange' => 'test_exchange_name',
+                    'routing_key' => 'test_routing_key'
+                ]
+            ]
+        ];
+
+        self::expectException(MissingQueueException::class);
+        self::expectExceptionMessage('Queue custom_queue_name has not been defined');
+        (new ConfigFactory($data))->create();
+    }
+
+
+    public function testShouldThrowExceptionWhenTryingToBindQueueWithNotDefinedExchange(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'name' => 'custom_queue'
+                ]
+            ],
+            'bindings' => [
+                'test_binding' => [
+                    'queue' => 'custom_queue_name',
+                    'exchange' => 'test_exchange_name',
+                    'routing_key' => 'test_routing_key'
+                ]
+            ]
+        ];
+
+        self::expectException(MissingExchangeException::class);
+        self::expectExceptionMessage('Exchange test_exchange_name has not been defined');
         (new ConfigFactory($data))->create();
     }
 }
