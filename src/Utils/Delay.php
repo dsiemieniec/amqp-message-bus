@@ -13,7 +13,7 @@ class Delay
     ) {
     }
 
-    public static function miliseconds(int $value): Delay
+    public static function milliseconds(int $value): Delay
     {
         if ($value < 0) {
             throw new InvalidArgumentException('Value must be greater or equal to 0');
@@ -24,7 +24,7 @@ class Delay
 
     public static function seconds(int $value): Delay
     {
-        return self::miliseconds($value * 1000);
+        return self::milliseconds($value * 1000);
     }
 
     public static function minutes(int $value): Delay

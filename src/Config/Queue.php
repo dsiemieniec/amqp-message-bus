@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Config\Arguments\Queue\QueueArgumentsCollection;
+
 class Queue
 {
     public const DEFAULT_PASSIVE = false;
@@ -15,6 +17,7 @@ class Queue
         private string $name,
         private Connection $connection,
         private ConsumerParameters $consumerParameters,
+        private QueueArgumentsCollection $arguments,
         private bool $passive = false,
         private bool $durable = false,
         private bool $exclusive = false,
@@ -55,5 +58,10 @@ class Queue
     public function getConsumerParameters(): ConsumerParameters
     {
         return $this->consumerParameters;
+    }
+
+    public function getArguments(): QueueArgumentsCollection
+    {
+        return $this->arguments;
     }
 }

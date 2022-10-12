@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Config\Arguments\Queue\QueueArgumentsCollection;
 use App\Serializer\DefaultCommandSerializer;
 use Exception;
 
@@ -11,18 +12,22 @@ final class ConfigFactory
 {
     private const DEFAULT_QUEUE_NAME = 'async_command_bus';
 
+    /** @var array<string, mixed> */
+    private array $config = [];
     private ConnectionsMap $connections;
     private ExchangesMap $exchanges;
     private QueuesMap $queues;
     private BindingsMap $bindings;
     private CommandConfigsMap $commands;
 
-    /**
-     * @param array<string, mixed> $config
-     */
     public function __construct(
-        private array $config
+        private QueueArgumentsFactory $queueArgumentsFactory
     ) {
+        $this->initMaps();
+    }
+
+    private function initMaps(): void
+    {
         $this->connections = new ConnectionsMap();
         $this->exchanges = new ExchangesMap();
         $this->queues = new QueuesMap();
@@ -31,10 +36,14 @@ final class ConfigFactory
     }
 
     /**
+     * @param array<string, mixed> $config
      * @throws Exception
      */
-    public function create(): Config
+    public function create(array $config): Config
     {
+        $this->config = $config;
+        $this->initMaps();
+
         $this->readConnections();
         $this->readExchanges();
         $this->readQueues();
@@ -80,6 +89,8 @@ final class ConfigFactory
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
+            $arguments = $params['arguments'] ?? [];
+
             $this->queues->put(
                 $name,
                 new Queue(
@@ -95,6 +106,7 @@ final class ConfigFactory
                         $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
                         $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
                     ),
+                    $this->queueArgumentsFactory->createCollection($arguments),
                     $params['passive'] ?? Queue::DEFAULT_PASSIVE,
                     $params['durable'] ?? Queue::DEFAULT_DURABLE,
                     $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
@@ -109,7 +121,8 @@ final class ConfigFactory
                 new Queue(
                     self::DEFAULT_QUEUE_NAME,
                     $this->connections->get('default'),
-                    new ConsumerParameters()
+                    new ConsumerParameters(),
+                    new QueueArgumentsCollection()
                 )
             );
         }

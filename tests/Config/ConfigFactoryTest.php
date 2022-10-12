@@ -4,6 +4,7 @@ namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
 use App\Config\ExchangeType;
+use App\Config\QueueArgumentsFactory;
 use App\Exception\MissingConnectionException;
 use App\Exception\MissingExchangeException;
 use App\Exception\MissingQueueException;
@@ -13,6 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
 {
+    private function getConfigFactory(): ConfigFactory
+    {
+        return new ConfigFactory(new QueueArgumentsFactory());
+    }
+
     public function testShouldCreateDefaultConfigWithMinimalParameters(): void
     {
         $data = [
@@ -27,7 +33,7 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $commandClass = 'TestCommand';
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
 
         $commandConfig = $config->getCommandConfig($commandClass);
         self::assertEquals($commandClass, $commandConfig->getCommandClass());
@@ -78,7 +84,7 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $commandClass = 'TestCommand';
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
 
         $publisherConfig = $config->getCommandConfig($commandClass)->getPublisherConfig();
         self::assertEquals('default_queue', $publisherConfig->getPublisherTarget()->getRoutingKey());
@@ -138,7 +144,7 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $commandConfig = $config->getCommandConfig('TestCommand');
         self::assertEquals('TestCommand', $commandConfig->getCommandClass());
         self::assertEquals('TestCommandSerializer', $commandConfig->getSerializerClass());
@@ -191,7 +197,7 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $commandConfig = $config->getCommandConfig('TestCommand');
         self::assertEquals('TestCommand', $commandConfig->getCommandClass());
         self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
@@ -257,7 +263,7 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $commandConfig = $config->getCommandConfig('TestCommand');
         self::assertEquals('TestCommand', $commandConfig->getCommandClass());
         self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
@@ -323,7 +329,7 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(InvalidArgumentException::class);
         self::expectExceptionMessage('Exchange and queue have different connection settings.');
-        (new ConfigFactory($data))->create();
+        $this->getConfigFactory()->create($data);
     }
 
     public function testShouldThrowExceptionWhenTryingToBindExchangeWithNotDefinedQueue(): void
@@ -360,7 +366,7 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(MissingQueueException::class);
         self::expectExceptionMessage('Queue custom_queue_name has not been defined');
-        (new ConfigFactory($data))->create();
+        $this->getConfigFactory()->create($data);
     }
 
     public function testShouldThrowExceptionWhenTryingToBindQueueWithNotDefinedExchange(): void
@@ -390,7 +396,7 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(MissingExchangeException::class);
         self::expectExceptionMessage('Exchange test_exchange_name has not been defined');
-        (new ConfigFactory($data))->create();
+        $this->getConfigFactory()->create($data);
     }
 
     public function testShouldThrowMissingConnectionException(): void
@@ -414,7 +420,7 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(MissingConnectionException::class);
         self::expectExceptionMessage('Connection second has not been defined');
-        (new ConfigFactory($data))->create();
+        $this->getConfigFactory()->create($data);
     }
 
     public function testShouldCreateDefaultQueueConsumerConfig(): void
@@ -430,7 +436,7 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $queueConfig = $config->getQueueConfig('default');
         $consumerConfig = $queueConfig->getConsumerParameters();
         self::assertEquals('', $consumerConfig->getTag());
@@ -461,7 +467,7 @@ class ConfigFactoryTest extends TestCase
             ],
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $queueConfig = $config->getQueueConfig('custom_queue_name');
         $consumerConfig = $queueConfig->getConsumerParameters();
         self::assertEquals('', $consumerConfig->getTag());
@@ -501,7 +507,7 @@ class ConfigFactoryTest extends TestCase
             ],
         ];
 
-        $config = (new ConfigFactory($data))->create();
+        $config = $this->getConfigFactory()->create($data);
         $queueConfig = $config->getQueueConfig('default');
         $consumerConfig = $queueConfig->getConsumerParameters();
         self::assertEquals('test_tag', $consumerConfig->getTag());
@@ -512,5 +518,46 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals(11, $consumerConfig->getTimeLimit());
         self::assertEquals(12, $consumerConfig->getWaitTimeout());
         self::assertEquals(1000, $consumerConfig->getMessagesLimit());
+    }
+
+    public function testShouldCreateQueueArguments(): void
+    {
+        $definedArguments = [
+            'x-expires' => 100,
+            'x-message-ttl' => 200,
+            'x-overflow' => 'drop-head',
+            'x-single-active-consumer' => true,
+            'x-dead-letter-exchange' => 'test_exchange',
+            'x-dead-letter-routing-key' => 'test_routing_key',
+            'x-max-length' => 1000,
+            'x-max-length-bytes' => 2048,
+            'x-max-priority' => 10,
+            'x-queue-mode' => 'lazy',
+            'x-queue-version' => 2,
+            'x-queue-master-locator' => 'something'
+        ];
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'arguments' => $definedArguments
+                ]
+            ],
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        $queueConfig = $config->getQueueConfig('custom_queue_name');
+        $arguments = [];
+        foreach ($queueConfig->getArguments() as $argument) {
+            $arguments[$argument->getKey()] = $argument->getValue();
+        }
+        self::assertEquals($definedArguments, $arguments);
     }
 }

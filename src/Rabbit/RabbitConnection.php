@@ -44,12 +44,20 @@ class RabbitConnection implements ConnectionInterface
 
     public function declareQueue(Queue $queue): void
     {
+        $arguments = [];
+        foreach ($queue->getArguments() as $argument) {
+            $arguments[$argument->getKey()] = $argument->getValue();
+        }
+        $arguments = \count($arguments) > 0 ? new AMQPTable($arguments) : [];
+
         $this->channel->queue_declare(
             $queue->getName(),
             $queue->isPassive(),
             $queue->isDurable(),
             $queue->isExclusive(),
-            $queue->isAutoDelete()
+            $queue->isAutoDelete(),
+            false,
+            $arguments
         );
     }
 
@@ -109,7 +117,7 @@ class RabbitConnection implements ConnectionInterface
             fn(AMQPMessage $message) => $callback->onMessage($message, $this)
         );
 
-        $startedAt = time();
+        $startedAt = \time();
         $i = 0;
         while ($this->channel->is_open() && !$this->consumerStopped) {
             $timeout = $this->calculateTimeout($startedAt, $parameters);

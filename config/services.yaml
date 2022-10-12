@@ -43,6 +43,9 @@ parameters:
             long_running:
                 connection: default
                 name: long_running
+            queue_with_arguments:
+                arguments:
+                    x-message-ttl: 200
         bindings:
             test_binding:
                 queue: second_queue_name
@@ -85,9 +88,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Config\ConfigFactory:
-        arguments:
-            - '%async_command_bus%'
+    App\Config\ConfigFactory: ~
 
     App\Config\Config:
         factory: ['@App\Config\ConfigFactory', 'create']
+        arguments: ['%async_command_bus%']
