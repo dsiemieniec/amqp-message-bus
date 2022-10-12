@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Exception\MissingExchangeException;
-use App\Exception\MissingMapItemException;
 
 class ExchangesMap
 {

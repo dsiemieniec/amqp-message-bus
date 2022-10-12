@@ -4,6 +4,7 @@ namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
 use App\Config\ExchangeType;
+use App\Exception\MissingConnectionException;
 use App\Exception\MissingExchangeException;
 use App\Exception\MissingQueueException;
 use App\Serializer\DefaultCommandSerializer;
@@ -391,6 +392,30 @@ class ConfigFactoryTest extends TestCase
 
         self::expectException(MissingExchangeException::class);
         self::expectExceptionMessage('Exchange test_exchange_name has not been defined');
+        (new ConfigFactory($data))->create();
+    }
+
+    public function testShouldThrowMissingConnectionException(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'connection' => 'second',
+                    'name' => 'custom_queue'
+                ]
+            ]
+        ];
+
+        self::expectException(MissingConnectionException::class);
+        self::expectExceptionMessage('Connection second has not been defined');
         (new ConfigFactory($data))->create();
     }
 }
