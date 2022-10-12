@@ -6,6 +6,6 @@ namespace App\Rabbit;
 
 interface CommandConsumerInterface
 {
-    public function consume(ConsumerLimits $limits): void;
+    public function consume(): void;
     public function stop(): void;
 }

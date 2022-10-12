@@ -6,6 +6,7 @@ namespace App\Rabbit;
 
 use App\Config\Binding;
 use App\Config\Connection;
+use App\Config\ConsumerParameters;
 use App\Config\Exchange;
 use App\Config\PublisherTarget;
 use App\Config\Queue;
@@ -33,7 +34,6 @@ class RabbitConnection implements ConnectionInterface
             $this->connectionConfig->getVHost()
         );
         $this->channel = $this->connection->channel();
-        $this->channel->basic_qos(0, 1, false);
     }
 
     public function __destruct()
@@ -93,11 +93,14 @@ class RabbitConnection implements ConnectionInterface
         $this->channel->basic_nack($msg->getDeliveryTag(), requeue: $requeue);
     }
 
-    public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void
+    public function consume(Queue $queue, ConsumerCallbackInterface $callback): void
     {
         $this->consumerStopped = false;
+        $parameters = $queue->getConsumerParameters();
+
+        $this->channel->basic_qos(0, 1, false);
         $this->channel->basic_consume(
-            $parameters->getQueue()->getName(),
+            $queue->getName(),
             $parameters->getTag(),
             !$parameters->isLocal(),
             !$parameters->isAck(),
@@ -106,23 +109,21 @@ class RabbitConnection implements ConnectionInterface
             fn(AMQPMessage $message) => $callback->onMessage($message, $this)
         );
 
-
-        $limits = $parameters->getLimits();
         $startedAt = time();
         $i = 0;
         while ($this->channel->is_open() && !$this->consumerStopped) {
-            $timeout = $this->calculateTimeout($startedAt, $limits);
+            $timeout = $this->calculateTimeout($startedAt, $parameters);
             if ($timeout > 0 && $timeout <= 1) {
                 $this->stopConsumer();
             }
             $this->channel->wait(null, false, $timeout);
-            if ($limits->hasMessagesLimit() && ++$i >= $limits->getMessagesLimit()) {
+            if ($parameters->hasMessagesLimit() && ++$i >= $parameters->getMessagesLimit()) {
                 $this->stopConsumer();
-                throw new MessageLimitException($limits->getMessagesLimit());
+                throw new MessageLimitException($parameters->getMessagesLimit());
             }
-            if ($this->timeLimitExceeded($startedAt, $limits)) {
+            if ($this->timeLimitExceeded($startedAt, $parameters)) {
                 $this->stopConsumer();
-                throw new TimeLimitException($limits->getTimeLimit());
+                throw new TimeLimitException($parameters->getTimeLimit());
             }
         }
     }
@@ -133,11 +134,11 @@ class RabbitConnection implements ConnectionInterface
         $this->consumerStopped = true;
     }
 
-    private function calculateTimeout(int $startedAt, ConsumerLimits $limits): int
+    private function calculateTimeout(int $startedAt, ConsumerParameters $parameters): int
     {
-        $timeout = $limits->getTimeout();
-        if ($limits->hasTimeLimit()) {
-            $finishAt = $startedAt + $limits->getTimeLimit();
+        $timeout = $parameters->getWaitTimeout();
+        if ($parameters->hasTimeLimit()) {
+            $finishAt = $startedAt + $parameters->getTimeLimit();
             $finishTimeout = $finishAt - \time();
             if ($finishTimeout <= 1) {
                 return 1;
@@ -149,8 +150,8 @@ class RabbitConnection implements ConnectionInterface
         return $timeout;
     }
 
-    private function timeLimitExceeded(int $startedAt, ConsumerLimits $limits): bool
+    private function timeLimitExceeded(int $startedAt, ConsumerParameters $parameters): bool
     {
-        return $limits->hasTimeLimit() && \time() >= $startedAt + $limits->getTimeLimit();
+        return $parameters->hasTimeLimit() && \time() >= $startedAt + $parameters->getTimeLimit();
     }
 }

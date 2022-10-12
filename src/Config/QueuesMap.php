@@ -10,12 +10,7 @@ use Exception;
 class QueuesMap
 {
     /** @var array<string, Queue> */
-    private array $queues;
-
-    public function __construct()
-    {
-        $this->queues = [];
-    }
+    private array $queues = [];
 
     public function put(string $name, Queue $queue): void
     {

@@ -416,4 +416,101 @@ class ConfigFactoryTest extends TestCase
         self::expectExceptionMessage('Connection second has not been defined');
         (new ConfigFactory($data))->create();
     }
+
+    public function testShouldCreateDefaultQueueConsumerConfig(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ]
+        ];
+
+        $config = (new ConfigFactory($data))->create();
+        $queueConfig = $config->getQueueConfig('default');
+        $consumerConfig = $queueConfig->getConsumerParameters();
+        self::assertEquals('', $consumerConfig->getTag());
+        self::assertTrue($consumerConfig->isAck());
+        self::assertFalse($consumerConfig->isExclusive());
+        self::assertTrue($consumerConfig->isLocal());
+        self::assertEquals(1, $consumerConfig->getPrefetchCount());
+        self::assertEquals(0, $consumerConfig->getTimeLimit());
+        self::assertEquals(0, $consumerConfig->getWaitTimeout());
+        self::assertEquals(0, $consumerConfig->getMessagesLimit());
+    }
+
+    public function testShouldCustomQueueHaveDefaultConsumerConfig(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'custom_queue_name' => [
+                    'name' => 'custom_queue'
+                ]
+            ],
+        ];
+
+        $config = (new ConfigFactory($data))->create();
+        $queueConfig = $config->getQueueConfig('custom_queue_name');
+        $consumerConfig = $queueConfig->getConsumerParameters();
+        self::assertEquals('', $consumerConfig->getTag());
+        self::assertTrue($consumerConfig->isAck());
+        self::assertFalse($consumerConfig->isExclusive());
+        self::assertTrue($consumerConfig->isLocal());
+        self::assertEquals(1, $consumerConfig->getPrefetchCount());
+        self::assertEquals(0, $consumerConfig->getTimeLimit());
+        self::assertEquals(0, $consumerConfig->getWaitTimeout());
+        self::assertEquals(0, $consumerConfig->getMessagesLimit());
+    }
+
+    public function testShouldOverwriteDefaultValuesOfConsumerConfigForDefaultConfig(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'default' => [
+                    'consumer' => [
+                        'tag' => 'test_tag',
+                        'ack' => false,
+                        'exclusive' => true,
+                        'local' => false,
+                        'prefetch_count' => 10,
+                        'time_limit' => 11,
+                        'wait_timeout' => 12,
+                        'messages_limit' => 1000
+                    ]
+                ]
+            ],
+        ];
+
+        $config = (new ConfigFactory($data))->create();
+        $queueConfig = $config->getQueueConfig('default');
+        $consumerConfig = $queueConfig->getConsumerParameters();
+        self::assertEquals('test_tag', $consumerConfig->getTag());
+        self::assertFalse($consumerConfig->isAck());
+        self::assertTrue($consumerConfig->isExclusive());
+        self::assertFalse($consumerConfig->isLocal());
+        self::assertEquals(10, $consumerConfig->getPrefetchCount());
+        self::assertEquals(11, $consumerConfig->getTimeLimit());
+        self::assertEquals(12, $consumerConfig->getWaitTimeout());
+        self::assertEquals(1000, $consumerConfig->getMessagesLimit());
+    }
 }

@@ -17,9 +17,9 @@ class CommandConsumer implements CommandConsumerInterface
         $this->connection = new RabbitConnection($queueConfig->getConnection());
     }
 
-    public function consume(ConsumerLimits $limits): void
+    public function consume(): void
     {
-        $this->connection->consume(new ConsumerParameters($this->queueConfig, $limits), $this->callback);
+        $this->connection->consume($this->queueConfig, $this->callback);
     }
 
     public function stop(): void

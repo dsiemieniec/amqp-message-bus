@@ -9,6 +9,8 @@ use Exception;
 
 final class ConfigFactory
 {
+    private const DEFAULT_QUEUE_NAME = 'async_command_bus';
+
     private ConnectionsMap $connections;
     private ExchangesMap $exchanges;
     private QueuesMap $queues;
@@ -76,15 +78,27 @@ final class ConfigFactory
     private function readQueues(): void
     {
         foreach ($this->config['queues'] ?? [] as $name => $params) {
+            $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
+            $consumerConfig = $params['consumer'] ?? [];
             $this->queues->put(
                 $name,
                 new Queue(
-                    $params['name'],
+                    $queueName,
                     $this->connections->get($params['connection'] ?? 'default'),
-                    $params['passive'] ?? false,
-                    $params['durable'] ?? false,
-                    $params['exclusive'] ?? false,
-                    $params['auto_delete'] ?? false
+                    new ConsumerParameters(
+                        $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
+                        $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
+                        $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
+                        $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
+                        $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
+                        $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
+                        $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
+                        $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
+                    ),
+                    $params['passive'] ?? Queue::DEFAULT_PASSIVE,
+                    $params['durable'] ?? Queue::DEFAULT_DURABLE,
+                    $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
+                    $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE
                 )
             );
         }
@@ -93,8 +107,9 @@ final class ConfigFactory
             $this->queues->put(
                 'default',
                 new Queue(
-                    'async_command_bus',
-                    $this->connections->get('default')
+                    self::DEFAULT_QUEUE_NAME,
+                    $this->connections->get('default'),
+                    new ConsumerParameters()
                 )
             );
         }

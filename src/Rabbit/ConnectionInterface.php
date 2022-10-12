@@ -16,7 +16,7 @@ interface ConnectionInterface
     public function declareExchange(Exchange $exchange): void;
     public function bindQueue(Binding $binding): void;
     public function publish(AMQPMessage $msg, PublisherTarget $target): void;
-    public function consume(ConsumerParameters $parameters, ConsumerCallbackInterface $callback): void;
+    public function consume(Queue $queue, ConsumerCallbackInterface $callback): void;
     public function ack(AMQPMessage $msg): void;
     public function nack(AMQPMessage $msg, bool $requeue): void;
 }

@@ -6,9 +6,15 @@ namespace App\Config;
 
 class Queue
 {
+    public const DEFAULT_PASSIVE = false;
+    public const DEFAULT_DURABLE = false;
+    public const DEFAULT_EXCLUSIVE = false;
+    public const DEFAULT_AUTO_DELETE = false;
+
     public function __construct(
         private string $name,
         private Connection $connection,
+        private ConsumerParameters $consumerParameters,
         private bool $passive = false,
         private bool $durable = false,
         private bool $exclusive = false,
@@ -44,5 +50,10 @@ class Queue
     public function isAutoDelete(): bool
     {
         return $this->autoDelete;
+    }
+
+    public function getConsumerParameters(): ConsumerParameters
+    {
+        return $this->consumerParameters;
     }
 }

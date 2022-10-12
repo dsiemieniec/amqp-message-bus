@@ -8,7 +8,6 @@ use App\Exception\MessageLimitException;
 use App\Exception\TimeLimitException;
 use App\Rabbit\CommandConsumer;
 use App\Rabbit\CommandConsumerFactory;
-use App\Rabbit\ConsumerLimits;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -40,27 +39,17 @@ class ConsumeCommandsCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('name', InputOption::VALUE_REQUIRED, 'Queue name', 'default');
-        $this->addOption('time-limit', null, InputOption::VALUE_OPTIONAL, 'Consumer time limit in seconds', 0);
-        $this->addOption('timeout', null, InputOption::VALUE_OPTIONAL, 'Consumer timeout limit in seconds', 0);
-        $this->addOption('message-limit', null, InputOption::VALUE_OPTIONAL, 'Consumed messages limit', 0);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         try {
-            $limits = new ConsumerLimits(
-                (int)$input->getOption('time-limit'),
-                (int)$input->getOption('timeout'),
-                (int)$input->getOption('message-limit')
-            );
-
             $this->name = $input->getArgument('name');
             $output->writeln(\sprintf('Starting %s consumer...', $this->name));
 
             $this->consumer = $this->consumerFactory->create($this->name);
-
-            $this->consumer->consume($limits);
+            $this->consumer->consume();
         } catch (MessageLimitException | TimeLimitException | AMQPTimeoutException $exception) {
             $io->warning($exception->getMessage());
         } catch (Throwable $exception) {

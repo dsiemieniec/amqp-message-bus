@@ -31,6 +31,8 @@ parameters:
             first_queue_name:
                 connection: default
                 name: first_queue
+                consumer:
+                    messages_limit: 1000
             second_queue_name:
                 connection: second
                 name: second_queue
