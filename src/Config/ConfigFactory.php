@@ -75,23 +75,27 @@ final class ConfigFactory
 
     private function readQueues(): void
     {
-        $this->queues->put(
-            'default',
-            new Queue(
-                'async_command_bus',
-                $this->connections->get('default')
-            )
-        );
+
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $this->queues->put(
                 $name,
                 new Queue(
                     $params['name'],
-                    $this->connections->get($params['connection']),
+                    $this->connections->get($params['connection'] ?? 'default'),
                     $params['passive'] ?? false,
                     $params['durable'] ?? false,
                     $params['exclusive'] ?? false,
                     $params['auto_delete'] ?? false
+                )
+            );
+        }
+
+        if (!$this->queues->has('default')) {
+            $this->queues->put(
+                'default',
+                new Queue(
+                    'async_command_bus',
+                    $this->connections->get('default')
                 )
             );
         }

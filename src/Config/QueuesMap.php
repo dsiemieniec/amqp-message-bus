@@ -21,12 +21,17 @@ class QueuesMap
         $this->queues[$name] = $queue;
     }
 
+    public function has(string $name): bool
+    {
+        return \array_key_exists($name, $this->queues);
+    }
+
     /**
      * @throws Exception
      */
     public function get(string $name): Queue
     {
-        if (!\array_key_exists($name, $this->queues)) {
+        if (!$this->has($name)) {
             throw new Exception('Missing queue config with name ' . $name);
         }
 
