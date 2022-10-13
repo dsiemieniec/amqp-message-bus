@@ -55,12 +55,12 @@ final class ConfigFactory
     {
         foreach ($this->config['connections'] ?? [] as $name => $params) {
             $this->connections[$name] = new Connection(
-                $name,
-                $params['host'],
-                (int)$params['port'],
-                $params['user'],
-                $params['password'],
-                $params['vhost'] ?? '/'
+                name: $name,
+                host: $params['host'],
+                port: (int)$params['port'],
+                user: $params['user'],
+                password: $params['password'],
+                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST
             );
         }
     }
@@ -70,8 +70,8 @@ final class ConfigFactory
         foreach ($this->config['exchanges'] ?? [] as $name => $params) {
             $this->exchanges[$name] = new Exchange(
                 name: $params['name'],
-                type: $params['type'] ?? 'direct',
-                connection: $this->connections[$params['connection'] ?? 'default'],
+                type: $params['type'] ?? Exchange::TYPE_DIRECT,
+                connection: $this->connections[$params['connection'] ?? Connection::DEFAULT_CONNECTION_NAME],
                 passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
                 durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
                 autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
@@ -89,7 +89,7 @@ final class ConfigFactory
 
             $this->queues[$name] = new Queue(
                 name: $queueName,
-                connection: $this->connections[$params['connection'] ?? 'default'],
+                connection: $this->connections[$params['connection'] ?? Connection::DEFAULT_CONNECTION_NAME],
                 consumerParameters: new ConsumerParameters(
                     tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
                     ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,

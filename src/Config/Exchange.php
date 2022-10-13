@@ -6,6 +6,8 @@ namespace App\Config;
 
 class Exchange
 {
+    public const TYPE_DIRECT = 'direct';
+
     public const DEFAULT_PASSIVE = false;
     public const DEFAULT_DURABLE = false;
     public const DEFAULT_AUTO_DELETE = false;

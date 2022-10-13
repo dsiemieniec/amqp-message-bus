@@ -6,13 +6,16 @@ namespace App\Config;
 
 class Connection
 {
+    public const DEFAULT_CONNECTION_NAME = 'default';
+    public const DEFAULT_VHOST = '/';
+
     public function __construct(
         private string $name,
         private string $host,
         private int $port,
         private string $user,
         private string $password,
-        private string $vHost = '/'
+        private string $vHost = self::DEFAULT_VHOST
     ) {
     }
 

@@ -23,12 +23,6 @@ final class MessageTransformer implements MessageTransformerInterface
     public function transformEnvelope(MessageEnvelopeInterface $envelope): AMQPMessage
     {
         $properties = [];
-        $headers = [];
-        foreach ($envelope->getProperties()->getHeaders()->all() as $header) {
-            $headers[$header->getName()] = $header->getValue();
-        }
-        $properties[PropertyKey::Headers->value] = new AMQPTable($headers);
-        $properties[PropertyKey::Type->value] = $envelope->getCommandClass();
 
         return new AMQPMessage((string) $envelope->getBody(), $properties);
     }

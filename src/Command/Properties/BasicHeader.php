@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Command\Properties\CommandProperty;
+namespace App\Command\Properties;
 
 final class BasicHeader implements HeaderInterface
 {
@@ -20,13 +20,5 @@ final class BasicHeader implements HeaderInterface
     public function getValue(): string
     {
         return $this->value;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function jsonSerialize(): array
-    {
-        return ['key' => $this->key, 'value' => $this->value];
     }
 }

@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Command\Properties;
 
-interface CommandPropertyInterface
+use ArrayAccess;
+
+interface CommandPropertyInterface extends ArrayAccess
 {
     public function getKey(): PropertyKey;
-    public function getPropertyValueAsString(): string;
-    public function equals(CommandPropertyInterface $property): bool;
+
+    /**
+     * @return int|string|array<string, string>
+     */
+    public function getValue(): int|string|array;
 }
