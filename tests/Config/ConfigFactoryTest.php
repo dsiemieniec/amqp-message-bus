@@ -585,7 +585,7 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
         $config = $this->getConfigFactory()->create($data);
-        $exchange = $config->getAllExchanges()[\array_key_first($config->getAllExchanges())];
+        $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('default', $exchange->getConnection()->getName());
         self::assertEquals('test_exchange', $exchange->getName());
         self::assertEquals('x-delayed-message', $exchange->getType());

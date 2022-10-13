@@ -39,10 +39,9 @@ class Config
         return $this->queues;
     }
 
-    /** @return Exchange[] */
-    public function getAllExchanges(): array
+    public function getAllExchanges(): ExchangesMap
     {
-        return $this->exchanges->all();
+        return $this->exchanges;
     }
 
     public function getAllBindings(): BindingsMap

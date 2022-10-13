@@ -68,18 +68,15 @@ final class ConfigFactory
     private function readExchanges(): void
     {
         foreach ($this->config['exchanges'] ?? [] as $name => $params) {
-            $this->exchanges->put(
-                $name,
-                new Exchange(
-                    name: $params['name'],
-                    type: $params['type'] ?? 'direct',
-                    connection: $this->connections[$params['connection'] ?? 'default'],
-                    passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
-                    durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
-                    autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
-                    internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
-                    arguments: $params['arguments'] ?? []
-                )
+            $this->exchanges[$name] = new Exchange(
+                name: $params['name'],
+                type: $params['type'] ?? 'direct',
+                connection: $this->connections[$params['connection'] ?? 'default'],
+                passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
+                durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
+                autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
+                internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
+                arguments: $params['arguments'] ?? []
             );
         }
     }
@@ -128,7 +125,7 @@ final class ConfigFactory
         foreach ($this->config['bindings'] ?? [] as $name => $params) {
             $this->bindings[$name] = new Binding(
                 $this->queues[$params['queue']],
-                $this->exchanges->get($params['exchange']),
+                $this->exchanges[$params['exchange']],
                 $params['routing_key'] ?? ''
             );
         }
@@ -144,7 +141,7 @@ final class ConfigFactory
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
                 $publisherConfig = new ExchangePublishedCommandConfig(
-                    $this->exchanges->get($exchangePublisherConfig['name']),
+                    $this->exchanges[$exchangePublisherConfig['name']],
                     $exchangePublisherConfig['routing_key'] ?? ''
                 );
             }

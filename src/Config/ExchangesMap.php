@@ -6,38 +6,28 @@ namespace App\Config;
 
 use App\Exception\MissingExchangeException;
 
-class ExchangesMap
+class ExchangesMap extends AbstractMap
 {
-    /** @var array<string, Exchange> */
-    private array $exchanges;
-
-    public function __construct()
+    public function current(): Exchange
     {
-        $this->exchanges = [];
+        return parent::current();
     }
 
-    public function has(string $name): bool
+    /**
+     * @param string $offset
+     */
+    public function offsetGet(mixed $offset): Exchange
     {
-        return \array_key_exists($name, $this->exchanges);
+        return parent::offsetGet($offset);
     }
 
-    public function put(string $name, Exchange $exchange): void
+    protected function getValueType(): string
     {
-        $this->exchanges[$name] = $exchange;
+        return Exchange::class;
     }
 
-    public function get(string $name): Exchange
+    protected function onMissingOffset(mixed $offset): mixed
     {
-        if (!$this->has($name)) {
-            throw new MissingExchangeException(\sprintf('Exchange %s has not been defined', $name));
-        }
-
-        return $this->exchanges[$name];
-    }
-
-    /** @return Exchange[] */
-    public function all(): array
-    {
-        return \array_values($this->exchanges);
+        throw new MissingExchangeException(\sprintf('Exchange %s has not been defined', $offset));
     }
 }
