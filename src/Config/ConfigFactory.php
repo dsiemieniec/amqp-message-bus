@@ -54,15 +54,13 @@ final class ConfigFactory
     private function readConnections(): void
     {
         foreach ($this->config['connections'] ?? [] as $name => $params) {
-            $this->connections->put(
-                new Connection(
-                    $name,
-                    $params['host'],
-                    (int)$params['port'],
-                    $params['user'],
-                    $params['password'],
-                    $params['vhost'] ?? '/'
-                )
+            $this->connections[$name] = new Connection(
+                $name,
+                $params['host'],
+                (int)$params['port'],
+                $params['user'],
+                $params['password'],
+                $params['vhost'] ?? '/'
             );
         }
     }
@@ -75,7 +73,7 @@ final class ConfigFactory
                 new Exchange(
                     name: $params['name'],
                     type: $params['type'] ?? 'direct',
-                    connection: $this->connections->get($params['connection'] ?? 'default'),
+                    connection: $this->connections[$params['connection'] ?? 'default'],
                     passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
                     durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
                     autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
@@ -94,7 +92,7 @@ final class ConfigFactory
 
             $this->queues[$name] = new Queue(
                 name: $queueName,
-                connection: $this->connections->get($params['connection'] ?? 'default'),
+                connection: $this->connections[$params['connection'] ?? 'default'],
                 consumerParameters: new ConsumerParameters(
                     tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
                     ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
@@ -116,7 +114,7 @@ final class ConfigFactory
         if (!isset($this->queues['default'])) {
             $this->queues['default'] = new Queue(
                 self::DEFAULT_QUEUE_NAME,
-                $this->connections->get('default'),
+                $this->connections['default'],
                 new ConsumerParameters()
             );
         }

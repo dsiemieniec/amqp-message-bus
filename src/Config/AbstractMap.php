@@ -17,7 +17,7 @@ abstract class AbstractMap implements ArrayAccess, Countable, Iterator
     protected array $keys = [];
     protected int $position = 0;
 
-    abstract protected function assertValueType(mixed $value): void;
+    abstract protected function getValueType(): string;
     abstract protected function onMissingOffset(mixed $offset): mixed;
 
     /**
@@ -104,6 +104,19 @@ abstract class AbstractMap implements ArrayAccess, Countable, Iterator
         if (!\is_string($offset)) {
             throw new InvalidArgumentException(
                 \sprintf('Offset must be of type string. %s given', \get_debug_type($offset))
+            );
+        }
+    }
+
+    protected function assertValueType(mixed $value): void
+    {
+        if (!\is_a($value, $this->getValueType())) {
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Value must be of type %s. %s given',
+                    $this->getValueType(),
+                    \get_debug_type($value)
+                )
             );
         }
     }

@@ -6,32 +6,28 @@ namespace App\Config;
 
 use App\Exception\MissingConnectionException;
 
-class ConnectionsMap
+class ConnectionsMap extends AbstractMap
 {
-    /** @var array<string, Connection> */
-    private array $connections;
-
-    public function __construct()
+    public function current(): Connection
     {
-        $this->connections = [];
+        return parent::current();
     }
 
-    public function has(string $name): bool
+    /**
+     * @param string $offset
+     */
+    public function offsetGet(mixed $offset): Connection
     {
-        return \array_key_exists($name, $this->connections);
+        return parent::offsetGet($offset);
     }
 
-    public function put(Connection $connection): void
+    protected function getValueType(): string
     {
-        $this->connections[$connection->getName()] = $connection;
+        return Connection::class;
     }
 
-    public function get(string $name): Connection
+    protected function onMissingOffset(mixed $offset): mixed
     {
-        if (!$this->has($name)) {
-            throw new MissingConnectionException(\sprintf('Connection %s has not been defined', $name));
-        }
-
-        return $this->connections[$name];
+        throw new MissingConnectionException(\sprintf('Connection %s has not been defined', $offset));
     }
 }
