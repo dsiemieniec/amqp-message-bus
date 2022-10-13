@@ -44,12 +44,6 @@ class RabbitConnection implements ConnectionInterface
 
     public function declareQueue(Queue $queue): void
     {
-        $arguments = [];
-        foreach ($queue->getArguments() as $argument) {
-            $arguments[$argument->getKey()] = $argument->getValue();
-        }
-        $arguments = \count($arguments) > 0 ? new AMQPTable($arguments) : [];
-
         $this->channel->queue_declare(
             $queue->getName(),
             $queue->isPassive(),
@@ -57,7 +51,7 @@ class RabbitConnection implements ConnectionInterface
             $queue->isExclusive(),
             $queue->isAutoDelete(),
             false,
-            $arguments
+            $queue->hasArguments() ? new AMQPTable($queue->getArguments()) : []
         );
     }
 

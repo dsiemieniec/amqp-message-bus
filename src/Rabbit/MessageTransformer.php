@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Rabbit;
 
+use App\Command\Properties\BasicHeader;
+use App\Command\Properties\CommandProperties;
 use App\Command\Properties\PropertyKey;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -12,23 +14,38 @@ final class MessageTransformer implements MessageTransformerInterface
 {
     public function transformMessage(AMQPMessage $message): MessageEnvelopeInterface
     {
-        $properties = $message->get_properties();
+        $messageProperties = $message->get_properties();
+        $commandClass = $messageProperties[PropertyKey::Type->value] ?? '';
+        unset($messageProperties[PropertyKey::Type->value]);
+
+        /** @var AMQPTable|null $headers */
+        $headers = $messageProperties[PropertyKey::Headers->value] ?? null;
+        $properties = new CommandProperties();
+        foreach ($headers?->getNativeData() ?? [] as $key => $value) {
+            $properties[PropertyKey::Headers] = new BasicHeader($key, $value);
+        }
+        unset($messageProperties[PropertyKey::Headers->value]);
+
+        foreach ($messageProperties as $key => $value) {
+            $properties[(string)$key] = $value;
+        }
 
         return new MessageEnvelope(
             $message->getBody(),
-            $properties[PropertyKey::Type->value] ?? ''
+            $commandClass,
+            $properties
         );
     }
 
     public function transformEnvelope(MessageEnvelopeInterface $envelope): AMQPMessage
     {
-        $properties = [];
-        $headers = [];
-        foreach ($envelope->getProperties()->getHeaders()->all() as $header) {
-            $headers[$header->getName()] = $header->getValue();
+        $properties = $envelope->getProperties();
+        $headers = $properties->headers();
+        $properties[PropertyKey::Type] = $envelope->getCommandClass();
+        $properties = $properties->toArray();
+        if (!empty($headers)) {
+            $properties[PropertyKey::Headers->value] = new AMQPTable($headers);
         }
-        $properties[PropertyKey::Headers->value] = new AMQPTable($headers);
-        $properties[PropertyKey::Type->value] = $envelope->getCommandClass();
 
         return new AMQPMessage((string) $envelope->getBody(), $properties);
     }

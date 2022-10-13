@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Command\Properties\CommandProperty;
+namespace App\Command\Properties;
 
 enum DeliveryMode: int
 {

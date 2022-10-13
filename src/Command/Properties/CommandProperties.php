@@ -4,23 +4,38 @@ declare(strict_types=1);
 
 namespace App\Command\Properties;
 
-use App\Command\Properties\CommandProperty\AbstractIntegerValueCommandProperty;
-use App\Command\Properties\CommandProperty\AbstractStringValueCommandProperty;
-use App\Command\Properties\CommandProperty\DeliveryMode;
-use App\Command\Properties\CommandProperty\DeliveryModeProperty;
-use App\Command\Properties\CommandProperty\Headers;
+use ArrayAccess;
+use InvalidArgumentException;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
-class CommandProperties
+/**
+ * @method string contentType()
+ * @method string contentEncoding()
+ * @method int deliveryMode()
+ * @method int priority()
+ * @method string correlationId()
+ * @method string replyTo()
+ * @method int expiration()
+ * @method string messageId()
+ * @method int timestamp()
+ * @method string userId()
+ * @method string appId()
+ * @method string clusterId()
+ * @method array headers()
+ */
+class CommandProperties implements ArrayAccess
 {
     /**
      * @var array<string, CommandPropertyInterface>
      */
     private array $properties = [];
+    private CamelCaseToSnakeCaseNameConverter $nameConverter;
 
     public function __construct(CommandPropertyInterface ...$properties)
     {
+        $this->nameConverter = new CamelCaseToSnakeCaseNameConverter();
         foreach ($properties as $property) {
-            $this->add($property);
+            $this[] = $property;
         }
     }
 
@@ -29,104 +44,164 @@ class CommandProperties
         return new CommandPropertiesBuilder();
     }
 
-    public function add(CommandPropertyInterface $property): void
+    /**
+     * @param array<int|string, mixed> $arguments
+     * @return int|string|array<string, string>|null
+     */
+    public function __call(string $name, array $arguments): int|string|array|null
     {
-        $this->properties[$property->getKey()->value] = $property;
+        if ($name !== 'headers') {
+            $name = $this->nameConverter->normalize($name);
+        } else {
+            $name = PropertyKey::Headers;
+        }
+
+        return $this[$name]?->getValue();
     }
 
     /**
-     * @return CommandPropertyInterface[]
+     * @param PropertyKey|string $offset
      */
-    public function all(): array
+    public function offsetExists(mixed $offset): bool
     {
-        return $this->properties;
+        return \array_key_exists($this->getPropertyKey($offset)->value, $this->properties);
     }
 
-    public function get(PropertyKey $key): ?CommandPropertyInterface
+    /**
+     * @param PropertyKey|string $offset
+     */
+    public function offsetGet(mixed $offset): ?CommandPropertyInterface
     {
-        return $this->properties[$key->value] ?? null;
+        return $this->properties[$this->getPropertyKey($offset)->value] ?? null;
     }
 
-    public function getHeaders(): Headers
+    /**
+     * @param PropertyKey|string|null $offset
+     * @param CommandPropertyInterface|HeaderInterface|DeliveryMode|string|integer $value
+     */
+    public function offsetSet(mixed $offset, mixed $value): void
     {
-        $headers = $this->get(PropertyKey::Headers);
+        if ($offset === null) {
+            if (!($value instanceof CommandPropertyInterface) && !($value instanceof HeaderInterface)) {
+                throw new InvalidArgumentException('Unknown property');
+            }
+            $key = $value instanceof HeaderInterface ? PropertyKey::Headers : $value->getKey();
+        } else {
+            $key = $this->getPropertyKey($offset);
+        }
 
-        return $headers instanceof Headers ? $headers : new Headers();
+        if ($key->equals(PropertyKey::Headers)) {
+            if (!isset($this->properties[PropertyKey::Headers->value])) {
+                $this->properties[PropertyKey::Headers->value] = new Headers();
+            }
+            $this->properties[PropertyKey::Headers->value][] = $value;
+        } else {
+            $this->properties[$key->value] = $this->getProperty($key, $value);
+        }
     }
 
-    public function getContentType(): ?string
+    public function offsetUnset(mixed $offset): void
     {
-        return $this->getStringValueProperty(PropertyKey::ContentType);
+        unset($this->properties[$this->getPropertyKey($offset)->value]);
     }
 
-    public function getContentEncoding(): ?string
+    /**
+     * @return array<string, int|string|array<string, string>>
+     */
+    public function toArray(): array
     {
-        return $this->getStringValueProperty(PropertyKey::ContentEncoding);
+        $result = [];
+        foreach ($this->properties as $key => $value) {
+            $result[$key] = $value->getValue();
+        }
+
+        return $result;
     }
 
-    public function getDeliveryMode(): ?DeliveryMode
+    private function getPropertyKey(mixed $offset): PropertyKey
     {
-        $property = $this->get(PropertyKey::DeliveryMode);
+        if ($offset instanceof PropertyKey) {
+            return $offset;
+        }
 
-        return $property instanceof DeliveryModeProperty ? $property->getValue() : null;
+        if (\is_string($offset)) {
+            $key = PropertyKey::tryFrom($offset);
+            if ($key !== null) {
+                return $key;
+            }
+        }
+
+        throw new InvalidArgumentException(
+            \sprintf(
+                'Invalid offset %s Allowed values %s',
+                $offset,
+                \implode(
+                    ', ',
+                    \array_map(
+                        fn(PropertyKey $propertyKey): string => $propertyKey->value,
+                        PropertyKey::cases()
+                    )
+                )
+            )
+        );
     }
 
-    public function getPriority(): ?int
+    private function getProperty(PropertyKey $key, mixed $value): CommandPropertyInterface
     {
-        return $this->getIntegerValueProperty(PropertyKey::Priority);
+        if ($value instanceof CommandPropertyInterface) {
+            return $value;
+        }
+
+        switch ($key) {
+            case PropertyKey::AppId:
+            case PropertyKey::ClusterId:
+            case PropertyKey::ContentEncoding:
+            case PropertyKey::ContentType:
+            case PropertyKey::CorrelationId:
+            case PropertyKey::MessageId:
+            case PropertyKey::ReplyTo:
+            case PropertyKey::Type:
+            case PropertyKey::UserId:
+                $this->assertStringProperty($key, $value);
+                return new StringProperty($key, $value);
+
+            case PropertyKey::Expiration:
+            case PropertyKey::Priority:
+            case PropertyKey::Timestamp:
+                $this->assertIntegerProperty($key, $value);
+                return new IntegerProperty($key, $value);
+
+            case PropertyKey::DeliveryMode:
+                return new DeliveryModeProperty($value);
+
+            default:
+                throw new InvalidArgumentException('Unknown property');
+        }
     }
 
-    public function getCorrelationId(): ?string
+    private function assertStringProperty(PropertyKey $key, mixed $value): void
     {
-        return $this->getStringValueProperty(PropertyKey::CorrelationId);
+        if (!is_string($value)) {
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Property %s expects string but %s given',
+                    $key->value,
+                    \get_debug_type($value)
+                )
+            );
+        }
     }
 
-    public function getReplyTo(): ?string
+    private function assertIntegerProperty(PropertyKey $key, mixed $value): void
     {
-        return $this->getStringValueProperty(PropertyKey::ReplyTo);
-    }
-
-    public function getExpiration(): ?int
-    {
-        return $this->getIntegerValueProperty(PropertyKey::Expiration);
-    }
-
-    public function getMessageId(): ?string
-    {
-        return $this->getStringValueProperty(PropertyKey::MessageId);
-    }
-
-    public function getTimestamp(): ?int
-    {
-        return $this->getIntegerValueProperty(PropertyKey::Timestamp);
-    }
-
-    public function getUserId(): ?string
-    {
-        return $this->getStringValueProperty(PropertyKey::UserId);
-    }
-
-    public function getAppId(): ?string
-    {
-        return $this->getStringValueProperty(PropertyKey::AppId);
-    }
-
-    public function getClusterId(): ?string
-    {
-        return $this->getStringValueProperty(PropertyKey::ClusterId);
-    }
-
-    private function getStringValueProperty(PropertyKey $key): ?string
-    {
-        $property = $this->get($key);
-
-        return $property instanceof AbstractStringValueCommandProperty ? $property->getValue() : null;
-    }
-
-    private function getIntegerValueProperty(PropertyKey $key): ?int
-    {
-        $property = $this->get($key);
-
-        return $property instanceof AbstractIntegerValueCommandProperty ? $property->getValue() : null;
+        if (!is_integer($value)) {
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Property %s expects integer but %s given',
+                    $key->value,
+                    \get_debug_type($value)
+                )
+            );
+        }
     }
 }
