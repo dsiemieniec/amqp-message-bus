@@ -75,10 +75,14 @@ final class ConfigFactory
             $this->exchanges->put(
                 $name,
                 new Exchange(
-                    $params['name'],
-                    ExchangeType::from($params['type'] ?? 'direct'),
-                    $this->connections->get($params['connection'] ?? 'default'),
-                    (bool)($params['delayed_active'] ?? false)
+                    name: $params['name'],
+                    type: $params['type'] ?? 'direct',
+                    connection: $this->connections->get($params['connection'] ?? 'default'),
+                    passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
+                    durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
+                    autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
+                    internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
+                    arguments: $params['arguments'] ?? []
                 )
             );
         }

@@ -23,10 +23,10 @@ parameters:
                 name: test_exchange
                 type: direct
             delayed_exchange:
-                connection: default
                 name: delayed_exchange
-                type: direct
-                delayed_active: true
+                type: x-delayed-message
+                arguments:
+                    x-delayed-type: direct
         queues:
             first_queue_name:
                 connection: default

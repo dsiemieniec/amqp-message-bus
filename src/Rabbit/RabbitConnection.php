@@ -63,17 +63,14 @@ class RabbitConnection implements ConnectionInterface
 
     public function declareExchange(Exchange $exchange): void
     {
-        $arguments = [];
-        $type = $exchange->getType()->value;
-        if ($exchange->isDelayedActive()) {
-            $arguments = new AMQPTable(['x-delayed-type' => $type]);
-            $type = 'x-delayed-message';
-        }
         $this->channel->exchange_declare(
-            $exchange->getName(),
-            $type,
-            auto_delete: false,
-            arguments: $arguments
+            exchange: $exchange->getName(),
+            type: $exchange->getType(),
+            passive: $exchange->isPassive(),
+            durable: $exchange->isDurable(),
+            auto_delete: $exchange->isAutoDelete(),
+            internal: $exchange->isInternal(),
+            arguments: $exchange->hasArguments() ? new AMQPTable($exchange->getArguments()) : []
         );
     }
 

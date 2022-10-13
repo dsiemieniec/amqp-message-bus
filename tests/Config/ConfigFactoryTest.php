@@ -3,7 +3,6 @@
 namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
-use App\Config\ExchangeType;
 use App\Config\QueueArgumentsFactory;
 use App\Exception\MissingConnectionException;
 use App\Exception\MissingExchangeException;
@@ -219,8 +218,7 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('async_command_bus', $binding->getQueue()->getName());
         $exchange = $binding->getExchange();
         self::assertEquals('test_exchange', $exchange->getName());
-        self::assertFalse($exchange->isDelayedActive());
-        self::assertEquals(ExchangeType::DIRECT, $exchange->getType());
+        self::assertEquals('direct', $exchange->getType());
     }
 
     public function testShouldDefineCommandPublishedToExchangeBoundToCustomQueue(): void
@@ -285,8 +283,12 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('custom_queue', $binding->getQueue()->getName());
         $exchange = $binding->getExchange();
         self::assertEquals('test_exchange', $exchange->getName());
-        self::assertFalse($exchange->isDelayedActive());
-        self::assertEquals(ExchangeType::DIRECT, $exchange->getType());
+        self::assertEquals('direct', $exchange->getType());
+        self::assertFalse($exchange->isInternal());
+        self::assertFalse($exchange->isAutoDelete());
+        self::assertFalse($exchange->isDurable());
+        self::assertFalse($exchange->isPassive());
+        self::assertFalse($exchange->hasArguments());
     }
 
     public function testShouldThrowExceptionWhenTryingToBindQueueAndExchangeWithDifferentConnections(): void
@@ -559,5 +561,43 @@ class ConfigFactoryTest extends TestCase
             $arguments[$argument->getKey()] = $argument->getValue();
         }
         self::assertEquals($definedArguments, $arguments);
+    }
+
+    public function testShouldCreateDelayedExchangeConfig(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange',
+                    'type' => 'x-delayed-message',
+                    'passive' => true,
+                    'durable' => true,
+                    'auto_delete' => true,
+                    'internal' => true,
+                    'arguments' => [
+                        'x-delayed-type' => 'direct'
+                    ]
+                ]
+            ]
+        ];
+        $config = $this->getConfigFactory()->create($data);
+        $exchange = $config->getAllExchanges()[\array_key_first($config->getAllExchanges())];
+        self::assertEquals('default', $exchange->getConnection()->getName());
+        self::assertEquals('test_exchange', $exchange->getName());
+        self::assertEquals('x-delayed-message', $exchange->getType());
+        self::assertTrue($exchange->hasArguments());
+        self::assertEquals(['x-delayed-type' => 'direct'], $exchange->getArguments());
+        self::assertTrue($exchange->isPassive());
+        self::assertTrue($exchange->isDurable());
+        self::assertTrue($exchange->isAutoDelete());
+        self::assertTrue($exchange->isInternal());
     }
 }

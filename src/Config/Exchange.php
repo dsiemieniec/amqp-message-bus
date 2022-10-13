@@ -6,11 +6,23 @@ namespace App\Config;
 
 class Exchange
 {
+    public const DEFAULT_PASSIVE = false;
+    public const DEFAULT_DURABLE = false;
+    public const DEFAULT_AUTO_DELETE = false;
+    public const DEFAULT_INTERNAL = false;
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function __construct(
         private string $name,
-        private ExchangeType $type,
+        private string $type,
         private Connection $connection,
-        private bool $delayedActive = false
+        private bool $passive = self::DEFAULT_PASSIVE,
+        private bool $durable = self::DEFAULT_DURABLE,
+        private bool $autoDelete = self::DEFAULT_AUTO_DELETE,
+        private bool $internal = self::DEFAULT_INTERNAL,
+        private array $arguments = []
     ) {
     }
 
@@ -19,7 +31,7 @@ class Exchange
         return $this->name;
     }
 
-    public function getType(): ExchangeType
+    public function getType(): string
     {
         return $this->type;
     }
@@ -29,8 +41,36 @@ class Exchange
         return $this->connection;
     }
 
-    public function isDelayedActive(): bool
+    /**
+     * @return array<string, mixed>
+     */
+    public function getArguments(): array
     {
-        return $this->delayedActive;
+        return $this->arguments;
+    }
+
+    public function hasArguments(): bool
+    {
+        return !empty($this->arguments);
+    }
+
+    public function isPassive(): bool
+    {
+        return $this->passive;
+    }
+
+    public function isDurable(): bool
+    {
+        return $this->durable;
+    }
+
+    public function isAutoDelete(): bool
+    {
+        return $this->autoDelete;
+    }
+
+    public function isInternal(): bool
+    {
+        return $this->internal;
     }
 }
