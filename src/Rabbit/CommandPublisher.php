@@ -8,10 +8,7 @@ use App\Command\CommandInterface;
 use App\Command\Properties\CommandProperties;
 use App\Config\Config;
 use App\Config\Connection as ConnectionConfig;
-use App\Command\Properties\PropertyKey;
 use App\Serializer\Serializer;
-use PhpAmqpLib\Message\AMQPMessage;
-use PhpAmqpLib\Wire\AMQPTable;
 
 class CommandPublisher implements CommandPublisherInterface
 {
@@ -22,13 +19,14 @@ class CommandPublisher implements CommandPublisherInterface
 
     public function __construct(
         private Config $config,
-        private Serializer $serializer
+        private Serializer $serializer,
+        private MessageTransformerInterface $transformer
     ) {
     }
 
     public function publish(CommandInterface $command, ?CommandProperties $commandProperties = null): void
     {
-        $message = $this->transformEnvelope(
+        $message = $this->transformer->transformEnvelope(
             $this->serializer->serialize($command, $commandProperties),
         );
         $publisherConfig = $this->config->getCommandConfig(\get_class($command))->getPublisherConfig();
@@ -45,18 +43,5 @@ class CommandPublisher implements CommandPublisherInterface
         }
 
         return $this->connections[$connectionConfig->getName()];
-    }
-
-    private function transformEnvelope(MessageEnvelopeInterface $envelope): AMQPMessage
-    {
-        $properties = [];
-        $headers = [];
-        foreach ($envelope->getProperties()->getHeaders()->all() as $header) {
-            $headers[$header->getName()] = $header->getValue();
-        }
-        $properties['application_headers'] = new AMQPTable($headers);
-        $properties[PropertyKey::Type->value] = $envelope->getCommandClass();
-
-        return new AMQPMessage((string) $envelope->getBody(), $properties);
     }
 }

@@ -18,6 +18,7 @@ final class CommandConsumerCallback implements ConsumerCallbackInterface
     public function __construct(
         private Serializer $serializer,
         private CommandBusInterface $commandBus,
+        private MessageTransformerInterface $transformer,
         private LoggerInterface $logger
     ) {
     }
@@ -27,7 +28,7 @@ final class CommandConsumerCallback implements ConsumerCallbackInterface
         try {
             $this->commandBus->execute(
                 $this->serializer->deserialize(
-                    $this->transformMessage($message)
+                    $this->transformer->transformMessage($message)
                 )
             );
 
@@ -36,15 +37,5 @@ final class CommandConsumerCallback implements ConsumerCallbackInterface
             $this->logger->error($exception->getMessage());
             $connection->nack($message, true);
         }
-    }
-
-    private function transformMessage(AMQPMessage $message): MessageEnvelopeInterface
-    {
-        $properties = $message->get_properties();
-
-        return new MessageEnvelope(
-            $message->getBody(),
-            $properties[PropertyKey::Type->value] ?? ''
-        );
     }
 }
