@@ -92,38 +92,32 @@ final class ConfigFactory
             $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
 
-            $this->queues->put(
-                $name,
-                new Queue(
-                    name: $queueName,
-                    connection: $this->connections->get($params['connection'] ?? 'default'),
-                    consumerParameters: new ConsumerParameters(
-                        tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
-                        ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
-                        exclusive: $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
-                        local: $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
-                        prefetchCount: $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
-                        timeLimit: $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
-                        waitTimeout: $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
-                        messagesLimit: $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
-                    ),
-                    passive: $params['passive'] ?? Queue::DEFAULT_PASSIVE,
-                    durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
-                    exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
-                    autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
-                    arguments: $params['arguments'] ?? [],
-                )
+            $this->queues[$name] = new Queue(
+                name: $queueName,
+                connection: $this->connections->get($params['connection'] ?? 'default'),
+                consumerParameters: new ConsumerParameters(
+                    tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
+                    ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
+                    exclusive: $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
+                    local: $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
+                    prefetchCount: $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
+                    timeLimit: $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
+                    waitTimeout: $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
+                    messagesLimit: $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
+                ),
+                passive: $params['passive'] ?? Queue::DEFAULT_PASSIVE,
+                durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
+                exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
+                autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
+                arguments: $params['arguments'] ?? [],
             );
         }
 
-        if (!$this->queues->has('default')) {
-            $this->queues->put(
-                'default',
-                new Queue(
-                    self::DEFAULT_QUEUE_NAME,
-                    $this->connections->get('default'),
-                    new ConsumerParameters()
-                )
+        if (!isset($this->queues['default'])) {
+            $this->queues['default'] = new Queue(
+                self::DEFAULT_QUEUE_NAME,
+                $this->connections->get('default'),
+                new ConsumerParameters()
             );
         }
     }
@@ -137,7 +131,7 @@ final class ConfigFactory
             $this->bindings->put(
                 $name,
                 new Binding(
-                    $this->queues->get($params['queue']),
+                    $this->queues[$params['queue']],
                     $this->exchanges->get($params['exchange']),
                     $params['routing_key'] ?? ''
                 )
@@ -151,7 +145,7 @@ final class ConfigFactory
             $publisherConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
-                $publisherConfig = new QueuePublishedCommandConfig($this->queues->get($publisherConfig['queue']));
+                $publisherConfig = new QueuePublishedCommandConfig($this->queues[$publisherConfig['queue']]);
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
                 $publisherConfig = new ExchangePublishedCommandConfig(
@@ -165,7 +159,7 @@ final class ConfigFactory
                     new CommandConfig(
                         $class,
                         $params['serializer'] ?? DefaultCommandSerializer::class,
-                        $publisherConfig ?? new QueuePublishedCommandConfig($this->queues->get('default'))
+                        $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default'])
                     )
                 );
         }

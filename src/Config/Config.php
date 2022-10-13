@@ -23,7 +23,7 @@ class Config
                 new CommandConfig(
                     $commandClass,
                     DefaultCommandSerializer::class,
-                    new QueuePublishedCommandConfig($this->queues->get('default'))
+                    new QueuePublishedCommandConfig($this->queues['default'])
                 )
             );
         }
@@ -33,13 +33,12 @@ class Config
 
     public function getQueueConfig(string $name): Queue
     {
-        return $this->queues->get($name);
+        return $this->queues[$name];
     }
 
-    /** @return Queue[] */
-    public function getAllQueues(): array
+    public function getAllQueues(): QueuesMap
     {
-        return $this->queues->all();
+        return $this->queues;
     }
 
     /** @return Exchange[] */
