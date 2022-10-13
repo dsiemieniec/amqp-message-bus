@@ -212,7 +212,7 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
 
-        $binding = $config->getAllBindings()[0];
+        $binding = $config->getAllBindings()['test_binding'];
         self::assertEquals($publisherConnectionConfig, $binding->getConnection());
         self::assertEquals('async_command_bus', $binding->getQueue()->getName());
         $exchange = $binding->getExchange();
@@ -277,7 +277,7 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
 
-        $binding = $config->getAllBindings()[0];
+        $binding = $config->getAllBindings()['test_binding'];
         self::assertEquals($publisherConnectionConfig, $binding->getConnection());
         self::assertEquals('custom_queue', $binding->getQueue()->getName());
         $exchange = $binding->getExchange();

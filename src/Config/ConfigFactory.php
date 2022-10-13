@@ -128,13 +128,10 @@ final class ConfigFactory
     private function readBindings(): void
     {
         foreach ($this->config['bindings'] ?? [] as $name => $params) {
-            $this->bindings->put(
-                $name,
-                new Binding(
-                    $this->queues[$params['queue']],
-                    $this->exchanges->get($params['exchange']),
-                    $params['routing_key'] ?? ''
-                )
+            $this->bindings[$name] = new Binding(
+                $this->queues[$params['queue']],
+                $this->exchanges->get($params['exchange']),
+                $params['routing_key'] ?? ''
             );
         }
     }

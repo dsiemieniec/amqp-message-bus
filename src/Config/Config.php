@@ -47,9 +47,8 @@ class Config
         return $this->exchanges->all();
     }
 
-    /** @return Binding[] */
-    public function getAllBindings(): array
+    public function getAllBindings(): BindingsMap
     {
-        return $this->bindings->all();
+        return $this->bindings;
     }
 }
