@@ -46,7 +46,7 @@ class CommandProperties implements ArrayAccess
 
     /**
      * @param array<int|string, mixed> $arguments
-     * @return int|string|array<string, string>
+     * @return int|string|array<string, string>|null
      */
     public function __call(string $name, array $arguments): int|string|array|null
     {
@@ -103,6 +103,19 @@ class CommandProperties implements ArrayAccess
     public function offsetUnset(mixed $offset): void
     {
         unset($this->properties[$this->getPropertyKey($offset)->value]);
+    }
+
+    /**
+     * @return array<string, int|string|array<string, string>>
+     */
+    public function toArray(): array
+    {
+        $result = [];
+        foreach ($this->properties as $key => $value) {
+            $result[$key] = $value->getValue();
+        }
+
+        return $result;
     }
 
     private function getPropertyKey(mixed $offset): PropertyKey

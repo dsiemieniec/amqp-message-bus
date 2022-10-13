@@ -4,7 +4,6 @@ namespace App\Tests\Command\Properties;
 
 use App\Command\Properties\CommandProperties;
 use App\Command\Properties\DeliveryMode;
-use App\Command\Properties\PropertyKey;
 use PHPUnit\Framework\TestCase;
 
 class CommandPropertiesTest extends TestCase
@@ -12,8 +11,8 @@ class CommandPropertiesTest extends TestCase
     public function testShouldCreateCommandProperties(): void
     {
         $commandProperties = CommandProperties::builder()
-            ->contentType('TestCommand')
-            ->contentEncoding('json')
+            ->contentType('json')
+            ->contentEncoding('UTF-8')
             ->deliveryMode(DeliveryMode::Persistent)
             ->priority(1000)
             ->correlationId('aassdd')
@@ -28,8 +27,8 @@ class CommandPropertiesTest extends TestCase
             ->addHeader('second-header', 'second-header-value')
             ->build();
 
-        self::assertEquals('TestCommand', $commandProperties->contentType());
-        self::assertEquals('json', $commandProperties->contentEncoding());
+        self::assertEquals('json', $commandProperties->contentType());
+        self::assertEquals('UTF-8', $commandProperties->contentEncoding());
         self::assertEquals(DeliveryMode::Persistent->value, $commandProperties->deliveryMode());
         self::assertEquals(1000, $commandProperties->priority());
         self::assertEquals('aassdd', $commandProperties->correlationId());

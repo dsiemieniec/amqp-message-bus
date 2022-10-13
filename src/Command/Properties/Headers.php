@@ -9,7 +9,7 @@ use App\Command\Properties\CommandPropertyInterface;
 use ArrayAccess;
 use InvalidArgumentException;
 
-class Headers implements CommandPropertyInterface, ArrayAccess
+class Headers implements CommandPropertyInterface
 {
     /**
      * @var array<string, HeaderInterface>
