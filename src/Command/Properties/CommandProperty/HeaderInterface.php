@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message\PublisherProperty;
+namespace App\Command\Properties\CommandProperty;
 
 use JsonSerializable;
 

@@ -8,6 +8,7 @@ use App\Command\AnotherSimpleCommand;
 use App\Command\CommandBusInterface;
 use App\Command\CommandInterface;
 use App\Command\DispatchedToOwnQueueCommand;
+use App\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
 use App\Utils\Delay;
 use DateTimeImmutable;
@@ -46,7 +47,10 @@ class SimulatePublishingCommand extends Command
         $progressBar->start();
 
         for ($i = 0; $i < $numberOfCommands; $i++) {
-            $this->commandBus->executeAsync($this->getRandomCommand(), Delay::seconds(\random_int(0, 15)));
+            $properties = CommandProperties::builder()
+                ->addHeader('x-delay', (string) Delay::seconds(\random_int(1, 15)))
+                ->build();
+            $this->commandBus->executeAsync($this->getRandomCommand(), $properties);
 
             $progressBar->advance();
         }

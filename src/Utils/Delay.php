@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Utils;
 
 use InvalidArgumentException;
+use Stringable;
 
-class Delay
+class Delay implements Stringable
 {
     private function __construct(
         private int $value
@@ -40,5 +41,10 @@ class Delay
     public function getValue(): int
     {
         return $this->value;
+    }
+
+    public function __toString(): string
+    {
+        return (string) $this->getValue();
     }
 }

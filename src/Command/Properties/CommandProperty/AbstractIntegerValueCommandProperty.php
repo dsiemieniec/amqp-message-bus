@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message\PublisherProperty;
+namespace App\Command\Properties\CommandProperty;
 
-use App\Rabbit\Message\PublisherPropertyInterface;
-use App\Rabbit\Message\PropertyKey;
+use App\Command\Properties\CommandPropertyInterface;
+use App\Command\Properties\PropertyKey;
 
-abstract class AbstractStringValuePublisherProperty implements PublisherPropertyInterface
+abstract class AbstractIntegerValueCommandProperty implements CommandPropertyInterface
 {
     public function __construct(
-        private string $value
+        private int $value
     ) {
     }
 
@@ -18,15 +18,15 @@ abstract class AbstractStringValuePublisherProperty implements PublisherProperty
 
     public function getPropertyValueAsString(): string
     {
-        return $this->getValue();
+        return (string)$this->getValue();
     }
 
-    public function getValue(): string
+    public function getValue(): int
     {
         return $this->value;
     }
 
-    public function equals(PublisherPropertyInterface $property): bool
+    public function equals(CommandPropertyInterface $property): bool
     {
         return $this->getKey()->equals($property->getKey())
             && $this->getPropertyValueAsString() === $property->getPropertyValueAsString();

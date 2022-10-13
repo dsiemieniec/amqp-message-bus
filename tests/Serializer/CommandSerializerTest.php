@@ -2,6 +2,7 @@
 
 namespace App\Tests\Serializer;
 
+use App\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
 use App\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +17,7 @@ class CommandSerializerTest extends TestCase
         self::assertEquals(
             $command,
             $serializer->deserialize(
-                $serializer->serialize($command)
+                $serializer->serialize($command, new CommandProperties())
             )
         );
     }

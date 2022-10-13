@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message\PublisherProperty;
+namespace App\Command\Properties\CommandProperty;
 
-use App\Rabbit\Message\PropertyKey;
-use App\Rabbit\Message\PublisherPropertyInterface;
+use App\Command\Properties\PropertyKey;
+use App\Command\Properties\CommandPropertyInterface;
 
-class Headers implements PublisherPropertyInterface
+class Headers implements CommandPropertyInterface
 {
     /**
      * @var array<string, HeaderInterface>
@@ -24,6 +24,11 @@ class Headers implements PublisherPropertyInterface
     public static function builder(): HeadersBuilder
     {
         return new HeadersBuilder();
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->getSize() === 0;
     }
 
     public function getSize(): int
@@ -67,7 +72,7 @@ class Headers implements PublisherPropertyInterface
         return \json_encode($this->toArray(), JSON_THROW_ON_ERROR);
     }
 
-    public function equals(PublisherPropertyInterface $property): bool
+    public function equals(CommandPropertyInterface $property): bool
     {
         if (!($property instanceof Headers) || $this->getKey()->equals($property->getKey())) {
             return false;

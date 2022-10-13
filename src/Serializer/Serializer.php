@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Serializer;
 
 use App\Command\CommandInterface;
+use App\Command\Properties\CommandProperties;
 use App\Config\Config;
-use App\Rabbit\Message\MessageEnvelopeInterface;
+use App\Rabbit\MessageEnvelopeInterface;
 
 final class Serializer
 {
@@ -16,9 +17,10 @@ final class Serializer
     ) {
     }
 
-    public function serialize(CommandInterface $command): MessageEnvelopeInterface
+    public function serialize(CommandInterface $command, ?CommandProperties $properties = null): MessageEnvelopeInterface
     {
-        return $this->getSerializer(\get_class($command))->serialize($command);
+        return $this->getSerializer(\get_class($command))
+            ->serialize($command, $properties ?: new CommandProperties());
     }
 
     public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface

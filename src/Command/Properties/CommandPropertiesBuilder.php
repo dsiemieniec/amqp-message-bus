@@ -2,35 +2,43 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message;
+namespace App\Command\Properties;
 
-use App\Rabbit\Message\PublisherProperty\AppIdProperty;
-use App\Rabbit\Message\PublisherProperty\ClusterIdProperty;
-use App\Rabbit\Message\PublisherProperty\ContentEncodingProperty;
-use App\Rabbit\Message\PublisherProperty\ContentTypeProperty;
-use App\Rabbit\Message\PublisherProperty\CorrelationIdProperty;
-use App\Rabbit\Message\PublisherProperty\DeliveryMode;
-use App\Rabbit\Message\PublisherProperty\DeliveryModeProperty;
-use App\Rabbit\Message\PublisherProperty\ExpirationProperty;
-use App\Rabbit\Message\PublisherProperty\Headers;
-use App\Rabbit\Message\PublisherProperty\MessageIdProperty;
-use App\Rabbit\Message\PublisherProperty\PriorityProperty;
-use App\Rabbit\Message\PublisherProperty\ReplyToProperty;
-use App\Rabbit\Message\PublisherProperty\TimestampProperty;
-use App\Rabbit\Message\PublisherProperty\TypeProperty;
-use App\Rabbit\Message\PublisherProperty\UserIdProperty;
+use App\Command\Properties\CommandProperty\AppIdProperty;
+use App\Command\Properties\CommandProperty\ClusterIdProperty;
+use App\Command\Properties\CommandProperty\ContentEncodingProperty;
+use App\Command\Properties\CommandProperty\ContentTypeProperty;
+use App\Command\Properties\CommandProperty\CorrelationIdProperty;
+use App\Command\Properties\CommandProperty\DeliveryMode;
+use App\Command\Properties\CommandProperty\DeliveryModeProperty;
+use App\Command\Properties\CommandProperty\ExpirationProperty;
+use App\Command\Properties\CommandProperty\Headers;
+use App\Command\Properties\CommandProperty\HeadersBuilder;
+use App\Command\Properties\CommandProperty\MessageIdProperty;
+use App\Command\Properties\CommandProperty\PriorityProperty;
+use App\Command\Properties\CommandProperty\ReplyToProperty;
+use App\Command\Properties\CommandProperty\TimestampProperty;
+use App\Command\Properties\CommandProperty\UserIdProperty;
 
-class PublisherPropertiesBuilder
+class CommandPropertiesBuilder
 {
-    /** @var PublisherPropertyInterface[] */
+    /** @var CommandPropertyInterface[] */
     private array $properties = [];
+    private HeadersBuilder $headersBuilder;
 
-    public function build(): PublisherProperties
+    public function __construct()
     {
-        return new PublisherProperties(...$this->properties);
+        $this->headersBuilder = Headers::builder();
     }
 
-    private function add(PublisherPropertyInterface $property): self
+    public function build(): CommandProperties
+    {
+        $this->add($this->headersBuilder->build());
+
+        return new CommandProperties(...$this->properties);
+    }
+
+    private function add(CommandPropertyInterface $property): self
     {
         $this->properties[] = $property;
 
@@ -47,9 +55,11 @@ class PublisherPropertiesBuilder
         return $this->add(new ContentEncodingProperty($value));
     }
 
-    public function headers(Headers $headers): self
+    public function addHeader(string $name, string $value): self
     {
-        return $this->add($headers);
+        $this->headersBuilder->add($name, $value);
+
+        return $this;
     }
 
     public function deliveryMode(DeliveryMode $value): self
@@ -85,11 +95,6 @@ class PublisherPropertiesBuilder
     public function timestamp(int $timestamp): self
     {
         return $this->add(new TimestampProperty($timestamp));
-    }
-
-    public function type(string $value): self
-    {
-        return $this->add(new TypeProperty($value));
     }
 
     public function userId(string $value): self

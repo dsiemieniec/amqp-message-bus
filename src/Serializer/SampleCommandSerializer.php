@@ -6,10 +6,11 @@ namespace App\Serializer;
 
 use App\Command\AnotherSimpleCommand;
 use App\Command\CommandInterface;
+use App\Command\Properties\CommandProperties;
 use App\Exception\DeserializationException;
 use App\Exception\SerializationException;
-use App\Rabbit\Message\MessageEnvelope\MessageEnvelope;
-use App\Rabbit\Message\MessageEnvelopeInterface;
+use App\Rabbit\MessageEnvelope;
+use App\Rabbit\MessageEnvelopeInterface;
 use DateTimeImmutable;
 
 class SampleCommandSerializer implements CommandSerializerInterface
@@ -17,7 +18,7 @@ class SampleCommandSerializer implements CommandSerializerInterface
     /**
      * @param AnotherSimpleCommand $command
      */
-    public function serialize(CommandInterface $command): MessageEnvelopeInterface
+    public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface
     {
         $body = \json_encode([
             'first_text' => $command->getFirstText(),
@@ -28,7 +29,7 @@ class SampleCommandSerializer implements CommandSerializerInterface
             throw new SerializationException(\json_last_error_msg());
         }
 
-        return new MessageEnvelope($body, \get_class($command));
+        return new MessageEnvelope($body, \get_class($command), $properties);
     }
 
     public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface

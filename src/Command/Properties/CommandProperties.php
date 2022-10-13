@@ -2,47 +2,47 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message;
+namespace App\Command\Properties;
 
-use App\Rabbit\Message\PublisherProperty\AbstractIntegerValuePublisherProperty;
-use App\Rabbit\Message\PublisherProperty\AbstractStringValuePublisherProperty;
-use App\Rabbit\Message\PublisherProperty\DeliveryMode;
-use App\Rabbit\Message\PublisherProperty\DeliveryModeProperty;
-use App\Rabbit\Message\PublisherProperty\Headers;
+use App\Command\Properties\CommandProperty\AbstractIntegerValueCommandProperty;
+use App\Command\Properties\CommandProperty\AbstractStringValueCommandProperty;
+use App\Command\Properties\CommandProperty\DeliveryMode;
+use App\Command\Properties\CommandProperty\DeliveryModeProperty;
+use App\Command\Properties\CommandProperty\Headers;
 
-class PublisherProperties
+class CommandProperties
 {
     /**
-     * @var array<string, PublisherPropertyInterface>
+     * @var array<string, CommandPropertyInterface>
      */
     private array $properties = [];
 
-    public function __construct(PublisherPropertyInterface ...$properties)
+    public function __construct(CommandPropertyInterface ...$properties)
     {
         foreach ($properties as $property) {
             $this->add($property);
         }
     }
 
-    public static function builder(): PublisherPropertiesBuilder
+    public static function builder(): CommandPropertiesBuilder
     {
-        return new PublisherPropertiesBuilder();
+        return new CommandPropertiesBuilder();
     }
 
-    public function add(PublisherPropertyInterface $property): void
+    public function add(CommandPropertyInterface $property): void
     {
         $this->properties[$property->getKey()->value] = $property;
     }
 
     /**
-     * @return PublisherPropertyInterface[]
+     * @return CommandPropertyInterface[]
      */
     public function all(): array
     {
         return $this->properties;
     }
 
-    public function get(PropertyKey $key): ?PublisherPropertyInterface
+    public function get(PropertyKey $key): ?CommandPropertyInterface
     {
         return $this->properties[$key->value] ?? null;
     }
@@ -101,11 +101,6 @@ class PublisherProperties
         return $this->getIntegerValueProperty(PropertyKey::Timestamp);
     }
 
-    public function getType(): ?string
-    {
-        return $this->getStringValueProperty(PropertyKey::Type);
-    }
-
     public function getUserId(): ?string
     {
         return $this->getStringValueProperty(PropertyKey::UserId);
@@ -125,13 +120,13 @@ class PublisherProperties
     {
         $property = $this->get($key);
 
-        return $property instanceof AbstractStringValuePublisherProperty ? $property->getValue() : null;
+        return $property instanceof AbstractStringValueCommandProperty ? $property->getValue() : null;
     }
 
     private function getIntegerValueProperty(PropertyKey $key): ?int
     {
         $property = $this->get($key);
 
-        return $property instanceof AbstractIntegerValuePublisherProperty ? $property->getValue() : null;
+        return $property instanceof AbstractIntegerValueCommandProperty ? $property->getValue() : null;
     }
 }

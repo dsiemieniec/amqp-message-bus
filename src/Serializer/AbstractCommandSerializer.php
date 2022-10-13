@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Serializer;
 
 use App\Command\CommandInterface;
-use App\Rabbit\Message\MessageEnvelope\MessageEnvelope;
-use App\Rabbit\Message\MessageEnvelopeInterface;
+use App\Command\Properties\CommandProperties;
+use App\Rabbit\MessageEnvelope;
+use App\Rabbit\MessageEnvelopeInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 abstract class AbstractCommandSerializer implements CommandSerializerInterface
@@ -20,12 +21,13 @@ abstract class AbstractCommandSerializer implements CommandSerializerInterface
 
     abstract protected function init(): SerializerInterface;
 
-    public function serialize(CommandInterface $command): MessageEnvelopeInterface
+    public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface
     {
-        return MessageEnvelope::builder(
+        return new MessageEnvelope(
             $this->serializer->serialize($command, 'json'),
-            \get_class($command)
-        )->build();
+            \get_class($command),
+            $properties
+        );
     }
 
     public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface

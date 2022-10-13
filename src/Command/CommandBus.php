@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Command\Properties\CommandProperties;
 use App\Exception\CommandBusException;
 use App\Handler\HandlerRegistryInterface;
 use App\Rabbit\CommandPublisherInterface;
@@ -36,10 +37,10 @@ final class CommandBus implements CommandBusInterface
         }
     }
 
-    public function executeAsync(CommandInterface $command, ?Delay $delay = null): void
+    public function executeAsync(CommandInterface $command, ?CommandProperties $properties = null): void
     {
         try {
-            $this->commandPublisher->publish($command, $delay);
+            $this->commandPublisher->publish($command, $properties);
         } catch (Throwable $throwable) {
             throw new CommandBusException('Failed to publish command', $command, $throwable);
         }

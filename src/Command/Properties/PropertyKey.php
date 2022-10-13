@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message;
+namespace App\Command\Properties;
 
 enum PropertyKey: string
 {

@@ -6,9 +6,9 @@ namespace App\Rabbit;
 
 use App\Command\CommandBusInterface;
 use App\Exception\CommandBusException;
-use App\Rabbit\Message\MessageEnvelope\MessageEnvelope;
-use App\Rabbit\Message\MessageEnvelopeInterface;
-use App\Rabbit\Message\PropertyKey;
+use App\Rabbit\MessageEnvelope;
+use App\Rabbit\MessageEnvelopeInterface;
+use App\Command\Properties\PropertyKey;
 use App\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
@@ -42,11 +42,9 @@ final class CommandConsumerCallback implements ConsumerCallbackInterface
     {
         $properties = $message->get_properties();
 
-        $builder = MessageEnvelope::builder(
+        return new MessageEnvelope(
             $message->getBody(),
             $properties[PropertyKey::Type->value] ?? ''
         );
-
-        return $builder->build();
     }
 }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Rabbit\Message\PublisherProperty;
+namespace App\Command\Properties\CommandProperty;
 
-use App\Rabbit\Message\PublisherPropertyInterface;
-use App\Rabbit\Message\PropertyKey;
+use App\Command\Properties\CommandPropertyInterface;
+use App\Command\Properties\PropertyKey;
 
-final class DeliveryModeProperty implements PublisherPropertyInterface
+final class DeliveryModeProperty implements CommandPropertyInterface
 {
     public function __construct(
         private DeliveryMode $deliveryMode
@@ -29,7 +29,7 @@ final class DeliveryModeProperty implements PublisherPropertyInterface
         return (string)$this->deliveryMode->value;
     }
 
-    public function equals(PublisherPropertyInterface $property): bool
+    public function equals(CommandPropertyInterface $property): bool
     {
         return $this->getKey()->equals($property->getKey())
             && $this->getPropertyValueAsString() === $property->getPropertyValueAsString();
