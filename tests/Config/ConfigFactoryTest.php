@@ -3,7 +3,6 @@
 namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
-use App\Config\QueueArgumentsFactory;
 use App\Exception\MissingConnectionException;
 use App\Exception\MissingExchangeException;
 use App\Exception\MissingQueueException;
@@ -15,7 +14,7 @@ class ConfigFactoryTest extends TestCase
 {
     private function getConfigFactory(): ConfigFactory
     {
-        return new ConfigFactory(new QueueArgumentsFactory());
+        return new ConfigFactory();
     }
 
     public function testShouldCreateDefaultConfigWithMinimalParameters(): void
@@ -556,11 +555,8 @@ class ConfigFactoryTest extends TestCase
 
         $config = $this->getConfigFactory()->create($data);
         $queueConfig = $config->getQueueConfig('custom_queue_name');
-        $arguments = [];
-        foreach ($queueConfig->getArguments() as $argument) {
-            $arguments[$argument->getKey()] = $argument->getValue();
-        }
-        self::assertEquals($definedArguments, $arguments);
+        self::assertEquals($definedArguments, $queueConfig->getArguments());
+        self::assertTrue($queueConfig->hasArguments());
     }
 
     public function testShouldCreateDelayedExchangeConfig(): void

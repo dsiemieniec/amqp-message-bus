@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-use App\Config\Arguments\Queue\QueueArgumentsCollection;
 use App\Serializer\DefaultCommandSerializer;
 use Exception;
 
@@ -20,9 +19,8 @@ final class ConfigFactory
     private BindingsMap $bindings;
     private CommandConfigsMap $commands;
 
-    public function __construct(
-        private QueueArgumentsFactory $queueArgumentsFactory
-    ) {
+    public function __construct()
+    {
         $this->initMaps();
     }
 
@@ -93,28 +91,27 @@ final class ConfigFactory
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
-            $arguments = $params['arguments'] ?? [];
 
             $this->queues->put(
                 $name,
                 new Queue(
-                    $queueName,
-                    $this->connections->get($params['connection'] ?? 'default'),
-                    new ConsumerParameters(
-                        $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
-                        $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
-                        $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
-                        $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
-                        $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
-                        $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
-                        $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
-                        $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
+                    name: $queueName,
+                    connection: $this->connections->get($params['connection'] ?? 'default'),
+                    consumerParameters: new ConsumerParameters(
+                        tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
+                        ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
+                        exclusive: $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
+                        local: $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
+                        prefetchCount: $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
+                        timeLimit: $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
+                        waitTimeout: $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
+                        messagesLimit: $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
                     ),
-                    $this->queueArgumentsFactory->createCollection($arguments),
-                    $params['passive'] ?? Queue::DEFAULT_PASSIVE,
-                    $params['durable'] ?? Queue::DEFAULT_DURABLE,
-                    $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
-                    $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE
+                    passive: $params['passive'] ?? Queue::DEFAULT_PASSIVE,
+                    durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
+                    exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
+                    autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
+                    arguments: $params['arguments'] ?? [],
                 )
             );
         }
@@ -125,8 +122,7 @@ final class ConfigFactory
                 new Queue(
                     self::DEFAULT_QUEUE_NAME,
                     $this->connections->get('default'),
-                    new ConsumerParameters(),
-                    new QueueArgumentsCollection()
+                    new ConsumerParameters()
                 )
             );
         }

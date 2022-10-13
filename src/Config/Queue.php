@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-use App\Config\Arguments\Queue\QueueArgumentsCollection;
-
 class Queue
 {
     public const DEFAULT_PASSIVE = false;
@@ -13,15 +11,18 @@ class Queue
     public const DEFAULT_EXCLUSIVE = false;
     public const DEFAULT_AUTO_DELETE = false;
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function __construct(
         private string $name,
         private Connection $connection,
         private ConsumerParameters $consumerParameters,
-        private QueueArgumentsCollection $arguments,
-        private bool $passive = false,
-        private bool $durable = false,
-        private bool $exclusive = false,
-        private bool $autoDelete = false
+        private bool $passive = self::DEFAULT_PASSIVE,
+        private bool $durable = self::DEFAULT_DURABLE,
+        private bool $exclusive = self::DEFAULT_EXCLUSIVE,
+        private bool $autoDelete = self::DEFAULT_AUTO_DELETE,
+        private array $arguments = []
     ) {
     }
 
@@ -60,8 +61,16 @@ class Queue
         return $this->consumerParameters;
     }
 
-    public function getArguments(): QueueArgumentsCollection
+    /**
+     * @return array<string, mixed>
+     */
+    public function getArguments(): array
     {
         return $this->arguments;
+    }
+
+    public function hasArguments(): bool
+    {
+        return !empty($this->arguments);
     }
 }
