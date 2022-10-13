@@ -27,7 +27,7 @@ final class MessageTransformer implements MessageTransformerInterface
         foreach ($envelope->getProperties()->getHeaders()->all() as $header) {
             $headers[$header->getName()] = $header->getValue();
         }
-        $properties['application_headers'] = new AMQPTable($headers);
+        $properties[PropertyKey::Headers->value] = new AMQPTable($headers);
         $properties[PropertyKey::Type->value] = $envelope->getCommandClass();
 
         return new AMQPMessage((string) $envelope->getBody(), $properties);

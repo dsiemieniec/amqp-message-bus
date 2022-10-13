@@ -17,8 +17,10 @@ final class Serializer
     ) {
     }
 
-    public function serialize(CommandInterface $command, ?CommandProperties $properties = null): MessageEnvelopeInterface
-    {
+    public function serialize(
+        CommandInterface $command,
+        ?CommandProperties $properties = null
+    ): MessageEnvelopeInterface {
         return $this->getSerializer(\get_class($command))
             ->serialize($command, $properties ?: new CommandProperties());
     }
