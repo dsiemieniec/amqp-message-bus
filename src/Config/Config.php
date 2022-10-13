@@ -18,17 +18,15 @@ class Config
 
     public function getCommandConfig(string $commandClass): CommandConfig
     {
-        if (!$this->commandConfigsMap->has($commandClass)) {
-            $this->commandConfigsMap->put(
-                new CommandConfig(
-                    $commandClass,
-                    DefaultCommandSerializer::class,
-                    new QueuePublishedCommandConfig($this->queues['default'])
-                )
+        if (!isset($this->commandConfigsMap[$commandClass])) {
+            $this->commandConfigsMap[$commandClass] = new CommandConfig(
+                $commandClass,
+                DefaultCommandSerializer::class,
+                new QueuePublishedCommandConfig($this->queues['default'])
             );
         }
 
-        return $this->commandConfigsMap->get($commandClass);
+        return $this->commandConfigsMap[$commandClass];
     }
 
     public function getQueueConfig(string $name): Queue

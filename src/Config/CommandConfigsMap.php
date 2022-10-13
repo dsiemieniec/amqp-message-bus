@@ -5,35 +5,37 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Exception\MissingCommandConfigException;
+use InvalidArgumentException;
 
-class CommandConfigsMap
+class CommandConfigsMap extends AbstractMap
 {
-    /** @var array<string, CommandConfig> */
-    private array $commands;
-
-    public function __construct()
+    public function current(): CommandConfig
     {
-        $this->commands = [];
+        return parent::current();
     }
 
-    public function put(CommandConfig $config): void
+    public function offsetGet(mixed $offset): CommandConfig
     {
-        $this->commands[$config->getCommandClass()] = $config;
+        return parent::offsetGet($offset);
     }
 
-    public function get(string $commandClass): CommandConfig
+    protected function assertValueType(mixed $value): void
     {
-        if (!$this->has($commandClass)) {
-            throw new MissingCommandConfigException(
-                \sprintf('Config has not been defined for command %s', $commandClass)
+        if (!($value instanceof CommandConfig)) {
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Value must be of type %s. %s given',
+                    CommandConfig::class,
+                    \get_debug_type($value)
+                )
             );
         }
-
-        return $this->commands[$commandClass];
     }
 
-    public function has(string $commandClass): bool
+    protected function onMissingOffset(mixed $offset): mixed
     {
-        return \array_key_exists($commandClass, $this->commands);
+        throw new MissingCommandConfigException(
+            \sprintf('Config has not been defined for command %s', $offset)
+        );
     }
 }

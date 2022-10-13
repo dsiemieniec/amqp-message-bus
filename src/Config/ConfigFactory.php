@@ -151,14 +151,11 @@ final class ConfigFactory
                 );
             }
 
-            $this->commands
-                ->put(
-                    new CommandConfig(
-                        $class,
-                        $params['serializer'] ?? DefaultCommandSerializer::class,
-                        $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default'])
-                    )
-                );
+            $this->commands[$class] = new CommandConfig(
+                $class,
+                $params['serializer'] ?? DefaultCommandSerializer::class,
+                $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default'])
+            );
         }
     }
 }
