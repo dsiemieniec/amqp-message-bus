@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Rabbit;
 
-use App\Config\Binding;
 use App\Config\Connection;
 use App\Config\ConsumerParameters;
 use App\Config\Exchange;
 use App\Config\PublisherTarget;
 use App\Config\Queue;
+use App\Config\QueueBinding;
 use App\Exception\MessageLimitException;
 use App\Exception\TimeLimitException;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -68,12 +68,12 @@ class RabbitConnection implements ConnectionInterface
         );
     }
 
-    public function bindQueue(Binding $binding): void
+    public function bindQueue(Exchange $exchange, QueueBinding $queueBinding): void
     {
         $this->channel->queue_bind(
-            $binding->getQueue()->getName(),
-            $binding->getExchange()->getName(),
-            $binding->getRoutingKey()
+            $queueBinding->getQueue()->getName(),
+            $exchange->getName(),
+            $queueBinding->getRoutingKey()
         );
     }
 

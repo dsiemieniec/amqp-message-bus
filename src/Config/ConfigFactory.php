@@ -16,7 +16,6 @@ final class ConfigFactory
     private ConnectionsMap $connections;
     private ExchangesMap $exchanges;
     private QueuesMap $queues;
-    private BindingsMap $bindings;
     private CommandConfigsMap $commands;
 
     public function __construct()
@@ -29,7 +28,6 @@ final class ConfigFactory
         $this->connections = new ConnectionsMap();
         $this->exchanges = new ExchangesMap();
         $this->queues = new QueuesMap();
-        $this->bindings = new BindingsMap();
         $this->commands = new CommandConfigsMap();
     }
 
@@ -43,12 +41,11 @@ final class ConfigFactory
         $this->initMaps();
 
         $this->readConnections();
-        $this->readExchanges();
         $this->readQueues();
-        $this->readBindings();
+        $this->readExchanges();
         $this->readCommandPublishers();
 
-        return new Config($this->exchanges, $this->queues, $this->bindings, $this->commands);
+        return new Config($this->exchanges, $this->queues, $this->commands);
     }
 
     private function readConnections(): void
@@ -76,7 +73,14 @@ final class ConfigFactory
                 durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
                 autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
                 internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
-                arguments: $params['arguments'] ?? []
+                arguments: $params['arguments'] ?? [],
+                queueBindings: \array_map(
+                    fn(array $binding): QueueBinding => new QueueBinding(
+                        $this->queues[$binding['queue']],
+                        $binding['routing_key']
+                    ),
+                    $params['queue_bindings'] ?? []
+                )
             );
         }
     }
@@ -104,7 +108,7 @@ final class ConfigFactory
                 durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
                 exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
                 autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
-                arguments: $params['arguments'] ?? [],
+                arguments: $params['arguments'] ?? []
             );
         }
 
@@ -113,20 +117,6 @@ final class ConfigFactory
                 self::DEFAULT_QUEUE_NAME,
                 $this->connections['default'],
                 new ConsumerParameters()
-            );
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function readBindings(): void
-    {
-        foreach ($this->config['bindings'] ?? [] as $name => $params) {
-            $this->bindings[$name] = new Binding(
-                $this->queues[$params['queue']],
-                $this->exchanges[$params['exchange']],
-                $params['routing_key'] ?? ''
             );
         }
     }

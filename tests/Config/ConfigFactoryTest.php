@@ -173,14 +173,13 @@ class ConfigFactoryTest extends TestCase
             ],
             'exchanges' => [
                 'test_exchange_name' => [
-                    'name' => 'test_exchange'
-                ]
-            ],
-            'bindings' => [
-                'test_binding' => [
-                    'queue' => 'default',
-                    'exchange' => 'test_exchange_name',
-                    'routing_key' => 'test_routing_key'
+                    'name' => 'test_exchange',
+                    'queue_bindings' => [
+                        [
+                            'queue' => 'default',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
                 ]
             ],
             'commands' => [
@@ -212,12 +211,13 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
 
-        $binding = $config->getAllBindings()['test_binding'];
-        self::assertEquals($publisherConnectionConfig, $binding->getConnection());
-        self::assertEquals('async_command_bus', $binding->getQueue()->getName());
-        $exchange = $binding->getExchange();
+        $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('test_exchange', $exchange->getName());
         self::assertEquals('direct', $exchange->getType());
+
+        $binding = $exchange->getQueueBindings()[0];
+        self::assertEquals('async_command_bus', $binding->getQueue()->getName());
+        self::assertEquals('test_routing_key', $binding->getRoutingKey());
     }
 
     public function testShouldDefineCommandPublishedToExchangeBoundToCustomQueue(): void
@@ -238,14 +238,13 @@ class ConfigFactoryTest extends TestCase
             ],
             'exchanges' => [
                 'test_exchange_name' => [
-                    'name' => 'test_exchange'
-                ]
-            ],
-            'bindings' => [
-                'test_binding' => [
-                    'queue' => 'custom_queue_name',
-                    'exchange' => 'test_exchange_name',
-                    'routing_key' => 'test_routing_key'
+                    'name' => 'test_exchange',
+                    'queue_bindings' => [
+                        [
+                            'queue' => 'custom_queue_name',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
                 ]
             ],
             'commands' => [
@@ -277,10 +276,7 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
 
-        $binding = $config->getAllBindings()['test_binding'];
-        self::assertEquals($publisherConnectionConfig, $binding->getConnection());
-        self::assertEquals('custom_queue', $binding->getQueue()->getName());
-        $exchange = $binding->getExchange();
+        $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('test_exchange', $exchange->getName());
         self::assertEquals('direct', $exchange->getType());
         self::assertFalse($exchange->isInternal());
@@ -288,49 +284,10 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($exchange->isDurable());
         self::assertFalse($exchange->isPassive());
         self::assertFalse($exchange->hasArguments());
-    }
 
-    public function testShouldThrowExceptionWhenTryingToBindQueueAndExchangeWithDifferentConnections(): void
-    {
-        $data = [
-            'connections' => [
-                'default' => [
-                    'host' => 'localhost',
-                    'port' => 5672,
-                    'user' => 'guest',
-                    'password' => 'guest'
-                ],
-                'second' => [
-                    'host' => 'localhost',
-                    'port' => 5672,
-                    'user' => 'guest',
-                    'password' => 'guest',
-                    'vhost' => 'test_vhost'
-                ]
-            ],
-            'queues' => [
-                'custom_queue_name' => [
-                    'connection' => 'second',
-                    'name' => 'custom_queue'
-                ]
-            ],
-            'exchanges' => [
-                'test_exchange_name' => [
-                    'name' => 'test_exchange'
-                ]
-            ],
-            'bindings' => [
-                'test_binding' => [
-                    'queue' => 'custom_queue_name',
-                    'exchange' => 'test_exchange_name',
-                    'routing_key' => 'test_routing_key'
-                ]
-            ]
-        ];
-
-        self::expectException(InvalidArgumentException::class);
-        self::expectExceptionMessage('Exchange and queue have different connection settings.');
-        $this->getConfigFactory()->create($data);
+        $binding = $exchange->getQueueBindings()[0];
+        self::assertEquals('custom_queue', $binding->getQueue()->getName());
+        self::assertEquals('test_routing_key', $binding->getRoutingKey());
     }
 
     public function testShouldThrowExceptionWhenTryingToBindExchangeWithNotDefinedQueue(): void
@@ -353,50 +310,19 @@ class ConfigFactoryTest extends TestCase
             ],
             'exchanges' => [
                 'test_exchange_name' => [
-                    'name' => 'test_exchange'
-                ]
-            ],
-            'bindings' => [
-                'test_binding' => [
-                    'queue' => 'custom_queue_name',
-                    'exchange' => 'test_exchange_name',
-                    'routing_key' => 'test_routing_key'
+                    'name' => 'test_exchange',
+                    'queue_bindings' => [
+                        [
+                            'queue' => 'custom_queue_name',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
                 ]
             ]
         ];
 
         self::expectException(MissingQueueException::class);
         self::expectExceptionMessage('Queue custom_queue_name has not been defined');
-        $this->getConfigFactory()->create($data);
-    }
-
-    public function testShouldThrowExceptionWhenTryingToBindQueueWithNotDefinedExchange(): void
-    {
-        $data = [
-            'connections' => [
-                'default' => [
-                    'host' => 'localhost',
-                    'port' => 5672,
-                    'user' => 'guest',
-                    'password' => 'guest'
-                ]
-            ],
-            'queues' => [
-                'custom_queue_name' => [
-                    'name' => 'custom_queue'
-                ]
-            ],
-            'bindings' => [
-                'test_binding' => [
-                    'queue' => 'custom_queue_name',
-                    'exchange' => 'test_exchange_name',
-                    'routing_key' => 'test_routing_key'
-                ]
-            ]
-        ];
-
-        self::expectException(MissingExchangeException::class);
-        self::expectExceptionMessage('Exchange test_exchange_name has not been defined');
         $this->getConfigFactory()->create($data);
     }
 

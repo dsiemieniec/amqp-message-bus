@@ -15,6 +15,7 @@ class Exchange
 
     /**
      * @param array<string, mixed> $arguments
+     * @param QueueBinding[] $queueBindings
      */
     public function __construct(
         private string $name,
@@ -24,7 +25,8 @@ class Exchange
         private bool $durable = self::DEFAULT_DURABLE,
         private bool $autoDelete = self::DEFAULT_AUTO_DELETE,
         private bool $internal = self::DEFAULT_INTERNAL,
-        private array $arguments = []
+        private array $arguments = [],
+        private array $queueBindings = []
     ) {
     }
 
@@ -74,5 +76,13 @@ class Exchange
     public function isInternal(): bool
     {
         return $this->internal;
+    }
+
+    /**
+     * @return QueueBinding[]
+     */
+    public function getQueueBindings(): array
+    {
+        return $this->queueBindings;
     }
 }

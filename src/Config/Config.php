@@ -11,7 +11,6 @@ class Config
     public function __construct(
         private ExchangesMap $exchanges,
         private QueuesMap $queues,
-        private BindingsMap $bindings,
         private CommandConfigsMap $commandConfigsMap
     ) {
     }
@@ -42,10 +41,5 @@ class Config
     public function getAllExchanges(): ExchangesMap
     {
         return $this->exchanges;
-    }
-
-    public function getAllBindings(): BindingsMap
-    {
-        return $this->bindings;
     }
 }

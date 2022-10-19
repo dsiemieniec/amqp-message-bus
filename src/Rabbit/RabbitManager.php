@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Rabbit;
 
-use App\Config\Binding;
 use App\Config\Config;
 use App\Config\Connection;
 use App\Config\Exchange;
@@ -21,7 +20,6 @@ class RabbitManager
     {
         $this->declareAllQueues();
         $this->declareAllExchanges();
-        $this->declareAllBindings();
     }
 
     private function declareAllQueues(): void
@@ -45,19 +43,12 @@ class RabbitManager
 
     private function declareExchange(Exchange $exchange): void
     {
-        $this->getRabbitConnection($exchange->getConnection())->declareExchange($exchange);
-    }
-
-    private function declareAllBindings(): void
-    {
-        foreach ($this->config->getAllBindings() as $binding) {
-            $this->declareBinding($binding);
+        $connection = $this->getRabbitConnection($exchange->getConnection());
+        $connection->declareExchange($exchange);
+        foreach ($exchange->getQueueBindings() as $queueBinding) {
+            $connection->declareQueue($queueBinding->getQueue());
+            $connection->bindQueue($exchange, $queueBinding);
         }
-    }
-
-    private function declareBinding(Binding $binding): void
-    {
-        $this->getRabbitConnection($binding->getConnection())->bindQueue($binding);
     }
 
     private function getRabbitConnection(Connection $connectionConfig): RabbitConnection

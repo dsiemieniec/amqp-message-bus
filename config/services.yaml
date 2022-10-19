@@ -22,11 +22,15 @@ parameters:
                 connection: second
                 name: test_exchange
                 type: direct
+                queue_bindings:
+                    - { queue: second_queue_name, routing_key: test_routing_key }
             delayed_exchange:
                 name: delayed_exchange
                 type: x-delayed-message
                 arguments:
                     x-delayed-type: direct
+                queue_bindings:
+                    - {queue: first_queue_name, routing_key: another_simple_command}
         queues:
             first_queue_name:
                 connection: default
@@ -46,15 +50,6 @@ parameters:
             queue_with_arguments:
                 arguments:
                     x-message-ttl: 200
-        bindings:
-            test_binding:
-                queue: second_queue_name
-                exchange: test_exchange_name
-                routing_key: test_routing_key
-            delayed_exchange_binding:
-                queue: first_queue_name
-                exchange: delayed_exchange
-                routing_key: another_simple_command
         commands:
             App\Command\AnotherSimpleCommand:
                 serializer: App\Serializer\SampleCommandSerializer
