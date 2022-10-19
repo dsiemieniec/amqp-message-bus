@@ -19,6 +19,7 @@ class CommandConsumer implements CommandConsumerInterface
 
     public function consume(): void
     {
+        $this->connection->declareQueue($this->queueConfig);
         $this->connection->consume($this->queueConfig, $this->callback);
     }
 
