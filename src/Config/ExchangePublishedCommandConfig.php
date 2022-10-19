@@ -21,4 +21,9 @@ class ExchangePublishedCommandConfig implements CommandPublisherConfig
     {
         return $this->exchange->getConnection();
     }
+
+    public function getExchange(): Exchange
+    {
+        return $this->exchange;
+    }
 }

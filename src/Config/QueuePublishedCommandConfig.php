@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Config;
 
-class QueuePublishedCommandConfig implements CommandPublisherConfig
+final class QueuePublishedCommandConfig implements CommandPublisherConfig
 {
     public function __construct(
         private Queue $queue
@@ -19,5 +19,10 @@ class QueuePublishedCommandConfig implements CommandPublisherConfig
     public function getConnection(): Connection
     {
         return $this->queue->getConnection();
+    }
+
+    public function getQueue(): Queue
+    {
+        return $this->queue;
     }
 }
