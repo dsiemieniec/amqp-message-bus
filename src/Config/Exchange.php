@@ -12,6 +12,7 @@ class Exchange
     public const DEFAULT_DURABLE = false;
     public const DEFAULT_AUTO_DELETE = false;
     public const DEFAULT_INTERNAL = false;
+    public const DEFAULT_AUTO_DECLARE = false;
 
     /**
      * @param array<string, mixed> $arguments
@@ -25,6 +26,7 @@ class Exchange
         private bool $durable = self::DEFAULT_DURABLE,
         private bool $autoDelete = self::DEFAULT_AUTO_DELETE,
         private bool $internal = self::DEFAULT_INTERNAL,
+        private bool $autoDeclare = self::DEFAULT_AUTO_DECLARE,
         private array $arguments = [],
         private array $queueBindings = []
     ) {
@@ -84,5 +86,10 @@ class Exchange
     public function getQueueBindings(): array
     {
         return $this->queueBindings;
+    }
+
+    public function canAutoDeclare(): bool
+    {
+        return $this->autoDeclare;
     }
 }

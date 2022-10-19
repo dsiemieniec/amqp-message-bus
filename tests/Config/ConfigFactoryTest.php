@@ -55,6 +55,7 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($defaultQueueConfig->isDurable());
         self::assertFalse($defaultQueueConfig->isAutoDelete());
         self::assertFalse($defaultQueueConfig->isExclusive());
+        self::assertFalse($defaultQueueConfig->canAutoDeclare());
         self::assertEquals($publisherConnectionConfig, $defaultQueueConfig->getConnection());
         self::assertTrue($publisherConnectionConfig->equals($defaultQueueConfig->getConnection()));
     }
@@ -76,7 +77,8 @@ class ConfigFactoryTest extends TestCase
                     'passive' => true,
                     'durable' => true,
                     'exclusive' => true,
-                    'auto_delete' => true
+                    'auto_delete' => true,
+                    'auto_declare' => true
                 ]
             ],
         ];
@@ -96,6 +98,7 @@ class ConfigFactoryTest extends TestCase
         self::assertTrue($defaultQueueConfig->isDurable());
         self::assertTrue($defaultQueueConfig->isAutoDelete());
         self::assertTrue($defaultQueueConfig->isExclusive());
+        self::assertTrue($defaultQueueConfig->canAutoDeclare());
         self::assertEquals($publisherConnectionConfig, $defaultQueueConfig->getConnection());
         self::assertTrue($publisherConnectionConfig->equals($defaultQueueConfig->getConnection()));
 
@@ -214,6 +217,7 @@ class ConfigFactoryTest extends TestCase
         $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('test_exchange', $exchange->getName());
         self::assertEquals('direct', $exchange->getType());
+        self::assertFalse($exchange->canAutoDeclare());
 
         $binding = $exchange->getQueueBindings()[0];
         self::assertEquals('async_command_bus', $binding->getQueue()->getName());
@@ -239,6 +243,7 @@ class ConfigFactoryTest extends TestCase
             'exchanges' => [
                 'test_exchange_name' => [
                     'name' => 'test_exchange',
+                    'auto_declare' => true,
                     'queue_bindings' => [
                         [
                             'queue' => 'custom_queue_name',
@@ -284,6 +289,7 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($exchange->isDurable());
         self::assertFalse($exchange->isPassive());
         self::assertFalse($exchange->hasArguments());
+        self::assertTrue($exchange->canAutoDeclare());
 
         $binding = $exchange->getQueueBindings()[0];
         self::assertEquals('custom_queue', $binding->getQueue()->getName());
@@ -521,5 +527,95 @@ class ConfigFactoryTest extends TestCase
         self::assertTrue($exchange->isDurable());
         self::assertTrue($exchange->isAutoDelete());
         self::assertTrue($exchange->isInternal());
+    }
+
+    public function testShouldEnableAutoDeclareByGlobalSetting(): void
+    {
+        $data = [
+            'auto_declare' => true,
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange',
+                    'queue_bindings' => [
+                        [
+                            'queue' => 'default',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
+                ]
+            ],
+            'commands' => [
+                'TestCommand' => [
+                    'publisher' => [
+                        'exchange' => [
+                            'name' => 'test_exchange_name',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        $queue = $config->getQueueConfig('default');
+        self::assertTrue($queue->canAutoDeclare());
+        $exchange = $config->getAllExchanges()['test_exchange_name'];
+        self::assertTrue($exchange->canAutoDeclare());
+    }
+
+    public function testShouldLocalAutoDeclareOverwriteGlobalSettings(): void
+    {
+        $data = [
+            'auto_declare' => true,
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => 5672,
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'default' => [
+                    'auto_declare' => false
+                ]
+            ],
+            'exchanges' => [
+                'test_exchange_name' => [
+                    'name' => 'test_exchange',
+                    'auto_declare' => false,
+                    'queue_bindings' => [
+                        [
+                            'queue' => 'default',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
+                ]
+            ],
+            'commands' => [
+                'TestCommand' => [
+                    'publisher' => [
+                        'exchange' => [
+                            'name' => 'test_exchange_name',
+                            'routing_key' => 'test_routing_key'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        $queue = $config->getQueueConfig('default');
+        self::assertFalse($queue->canAutoDeclare());
+        $exchange = $config->getAllExchanges()['test_exchange_name'];
+        self::assertFalse($exchange->canAutoDeclare());
     }
 }

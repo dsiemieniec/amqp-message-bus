@@ -10,6 +10,7 @@ class Queue
     public const DEFAULT_DURABLE = false;
     public const DEFAULT_EXCLUSIVE = false;
     public const DEFAULT_AUTO_DELETE = false;
+    public const DEFAULT_AUTO_DECLARE = false;
 
     /**
      * @param array<string, mixed> $arguments
@@ -22,6 +23,7 @@ class Queue
         private bool $durable = self::DEFAULT_DURABLE,
         private bool $exclusive = self::DEFAULT_EXCLUSIVE,
         private bool $autoDelete = self::DEFAULT_AUTO_DELETE,
+        private bool $autoDeclare = self::DEFAULT_AUTO_DECLARE,
         private array $arguments = []
     ) {
     }
@@ -72,5 +74,10 @@ class Queue
     public function hasArguments(): bool
     {
         return !empty($this->arguments);
+    }
+
+    public function canAutoDeclare(): bool
+    {
+        return $this->autoDeclare;
     }
 }

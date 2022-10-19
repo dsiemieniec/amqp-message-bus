@@ -64,6 +64,7 @@ final class ConfigFactory
 
     private function readExchanges(): void
     {
+        $globalAutoDeclare = $this->config['auto_declare'] ?? Exchange::DEFAULT_AUTO_DECLARE;
         foreach ($this->config['exchanges'] ?? [] as $name => $params) {
             $this->exchanges[$name] = new Exchange(
                 name: $params['name'],
@@ -73,6 +74,7 @@ final class ConfigFactory
                 durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
                 autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
                 internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
+                autoDeclare: $params['auto_declare'] ?? $globalAutoDeclare,
                 arguments: $params['arguments'] ?? [],
                 queueBindings: \array_map(
                     fn(array $binding): QueueBinding => new QueueBinding(
@@ -87,6 +89,7 @@ final class ConfigFactory
 
     private function readQueues(): void
     {
+        $globalAutoDeclare = $this->config['auto_declare'] ?? Queue::DEFAULT_AUTO_DECLARE;
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
@@ -108,6 +111,7 @@ final class ConfigFactory
                 durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
                 exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
                 autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
+                autoDeclare: $params['auto_declare'] ?? $globalAutoDeclare,
                 arguments: $params['arguments'] ?? []
             );
         }
@@ -116,7 +120,8 @@ final class ConfigFactory
             $this->queues['default'] = new Queue(
                 self::DEFAULT_QUEUE_NAME,
                 $this->connections['default'],
-                new ConsumerParameters()
+                new ConsumerParameters(),
+                autoDeclare: $globalAutoDeclare
             );
         }
     }

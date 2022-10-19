@@ -12,6 +12,7 @@ use App\Config\Connection as ConnectionConfig;
 use App\Config\ExchangePublishedCommandConfig;
 use App\Config\QueuePublishedCommandConfig;
 use App\Serializer\Serializer;
+use Psr\Log\LoggerInterface;
 
 class CommandPublisher implements CommandPublisherInterface
 {
@@ -27,7 +28,8 @@ class CommandPublisher implements CommandPublisherInterface
     public function __construct(
         private Config $config,
         private Serializer $serializer,
-        private MessageTransformerInterface $transformer
+        private MessageTransformerInterface $transformer,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -63,12 +65,26 @@ class CommandPublisher implements CommandPublisherInterface
         }
 
         $publisherConfig = $commandConfig->getPublisherConfig();
-        if ($publisherConfig instanceof QueuePublishedCommandConfig) {
+        if ($publisherConfig instanceof QueuePublishedCommandConfig && $publisherConfig->getQueue()->canAutoDeclare()) {
             $this->getConnection($publisherConfig->getConnection())->declareQueue($publisherConfig->getQueue());
-        } elseif ($publisherConfig instanceof ExchangePublishedCommandConfig) {
+        } elseif (
+            $publisherConfig instanceof ExchangePublishedCommandConfig
+            && $publisherConfig->getExchange()->canAutoDeclare()
+        ) {
             $connection = $this->getConnection($publisherConfig->getConnection());
             $connection->declareExchange($publisherConfig->getExchange());
             foreach ($publisherConfig->getExchange()->getQueueBindings() as $queueBinding) {
+                if (!$queueBinding->getQueue()->canAutoDeclare()) {
+                    $logMessage = \sprintf(
+                        'Cannot declare binding to %s (routing_key: %s) because queue has disabled auto_declaration',
+                        $queueBinding->getQueue()->getName(),
+                        $queueBinding->getRoutingKey()
+                    );
+                    $this->logger->warning($logMessage);
+
+                    continue;
+                }
+
                 $connection->declareQueue($queueBinding->getQueue());
                 $connection->bindQueue($publisherConfig->getExchange(), $queueBinding);
             }
