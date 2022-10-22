@@ -16,4 +16,7 @@
     <file>src/</file>
     <file>tests/</file>
 
+    <rule ref="vendor/slevomat/coding-standard/SlevomatCodingStandard/ruleset.xml">
+        <!-- sniffs to exclude -->
+    </rule>
 </ruleset>
