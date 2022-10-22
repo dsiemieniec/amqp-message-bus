@@ -149,6 +149,7 @@ class ConfigFactoryTest extends TestCase
         $commandConfig = $config->getCommandConfig('TestCommand');
         self::assertEquals('TestCommand', $commandConfig->getCommandClass());
         self::assertEquals('TestCommandSerializer', $commandConfig->getSerializerClass());
+        self::assertFalse($commandConfig->requeueOnFailure());
 
         $publisherConfig = $commandConfig->getPublisherConfig();
         self::assertEquals('custom_queue', $publisherConfig->getPublisherTarget()->getRoutingKey());
@@ -187,6 +188,7 @@ class ConfigFactoryTest extends TestCase
             ],
             'commands' => [
                 'TestCommand' => [
+                    'requeue_on_failure' => true,
                     'publisher' => [
                         'exchange' => [
                             'name' => 'test_exchange_name',
@@ -201,6 +203,7 @@ class ConfigFactoryTest extends TestCase
         $commandConfig = $config->getCommandConfig('TestCommand');
         self::assertEquals('TestCommand', $commandConfig->getCommandClass());
         self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
+        self::assertTrue($commandConfig->requeueOnFailure());
 
         $publisherConfig = $commandConfig->getPublisherConfig();
         self::assertEquals('test_routing_key', $publisherConfig->getPublisherTarget()->getRoutingKey());

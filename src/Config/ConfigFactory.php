@@ -144,7 +144,8 @@ final class ConfigFactory
             $this->commands[$class] = new CommandConfig(
                 $class,
                 $params['serializer'] ?? DefaultCommandSerializer::class,
-                $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default'])
+                $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default']),
+                $params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE
             );
         }
     }
