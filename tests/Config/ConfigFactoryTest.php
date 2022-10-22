@@ -3,6 +3,7 @@
 namespace App\Tests\Config;
 
 use App\Config\ConfigFactory;
+use App\Config\Queue;
 use App\Exception\MissingConnectionException;
 use App\Exception\MissingExchangeException;
 use App\Exception\MissingQueueException;
@@ -620,5 +621,105 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($queue->canAutoDeclare());
         $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertFalse($exchange->canAutoDeclare());
+    }
+
+    public function testShouldCastConnectionConfigValues(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => '5672',
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ]
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        $connection = $config->getCommandConfig('TestCommand')->getPublisherConfig()->getConnection();
+        self::assertEquals(5672, $connection->getPort());
+    }
+
+    public function testShouldCastQueueConfigValues(): void
+    {
+        $data = [
+            'connections' => [
+                'default' => [
+                    'host' => 'localhost',
+                    'port' => '5672',
+                    'user' => 'guest',
+                    'password' => 'guest'
+                ]
+            ],
+            'queues' => [
+                'default' => [
+                    'passive' => 'true',
+                    'durable' => 'true',
+                    'exclusive' => 'false',
+                    'auto_delete' => 'false',
+                    'auto_declare' => 'true',
+                    'consumer' => [
+                        'ack' => 'false',
+                        'exclusive' => 'true',
+                        'local' => 'false',
+                        'prefetch_count' => '10',
+                        'time_limit' => '11',
+                        'wait_timeout' => '12',
+                        'messages_limit' => '1000'
+                    ]
+                ],
+                'second' => [
+                    'passive' => 1,
+                    'durable' => 1,
+                    'exclusive' => 0,
+                    'auto_delete' => 0,
+                    'auto_declare' => 1,
+                    'consumer' => [
+                        'ack' => 0,
+                        'exclusive' => 1,
+                        'local' => 0,
+                        'prefetch_count' => '10',
+                        'time_limit' => '11',
+                        'wait_timeout' => '12',
+                        'messages_limit' => '1000'
+                    ]
+                ],
+                'third' => [
+                    'passive' => '1',
+                    'durable' => '1',
+                    'exclusive' => '0',
+                    'auto_delete' => '0',
+                    'auto_declare' => '1',
+                    'consumer' => [
+                        'ack' => '0',
+                        'exclusive' => '1',
+                        'local' => '0',
+                        'prefetch_count' => '10',
+                        'time_limit' => '11',
+                        'wait_timeout' => '12',
+                        'messages_limit' => '1000'
+                    ]
+                ]
+            ]
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        foreach ($config->getAllQueues() as $queue) {
+            self::assertTrue($queue->isPassive(), 'passive');
+            self::assertTrue($queue->isDurable(), 'durable');
+            self::assertFalse($queue->isExclusive(), 'exclusive queue');
+            self::assertFalse($queue->isAutoDelete(), 'auto_delete');
+            self::assertTrue($queue->canAutoDeclare(), 'auto_declare');
+
+            $consumer = $queue->getConsumerParameters();
+            self::assertFalse($consumer->isAck(), 'ack');
+            self::assertTrue($consumer->isExclusive(), 'exclusive consumer');
+            self::assertFalse($consumer->isLocal(), 'local');
+            self::assertEquals(10, $consumer->getPrefetchCount(), 'prefetch count');
+            self::assertEquals(11, $consumer->getTimeLimit(), 'time limit');
+            self::assertEquals(12, $consumer->getWaitTimeout(), 'wait timeout');
+            self::assertEquals(1000, $consumer->getMessagesLimit(), 'messages limit');
+        }
     }
 }

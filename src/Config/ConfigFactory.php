@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Config;
 
 use App\Serializer\DefaultCommandSerializer;
+use App\Utils\Inputs;
 use Exception;
 
 final class ConfigFactory
@@ -64,17 +65,17 @@ final class ConfigFactory
 
     private function readExchanges(): void
     {
-        $globalAutoDeclare = $this->config['auto_declare'] ?? Exchange::DEFAULT_AUTO_DECLARE;
+        $globalAutoDeclare = Inputs::boolValue($this->config['auto_declare'] ?? Exchange::DEFAULT_AUTO_DECLARE);
         foreach ($this->config['exchanges'] ?? [] as $name => $params) {
             $this->exchanges[$name] = new Exchange(
                 name: $params['name'],
                 type: $params['type'] ?? Exchange::TYPE_DIRECT,
                 connection: $this->connections[$params['connection'] ?? Connection::DEFAULT_CONNECTION_NAME],
-                passive: $params['passive'] ?? Exchange::DEFAULT_PASSIVE,
-                durable: $params['durable'] ?? Exchange::DEFAULT_DURABLE,
-                autoDelete: $params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE,
-                internal: $params['internal'] ?? Exchange::DEFAULT_INTERNAL,
-                autoDeclare: $params['auto_declare'] ?? $globalAutoDeclare,
+                passive: Inputs::boolValue($params['passive'] ?? Exchange::DEFAULT_PASSIVE),
+                durable: Inputs::boolValue($params['durable'] ?? Exchange::DEFAULT_DURABLE),
+                autoDelete: Inputs::boolValue($params['auto_delete'] ?? Exchange::DEFAULT_AUTO_DELETE),
+                internal: Inputs::boolValue($params['internal'] ?? Exchange::DEFAULT_INTERNAL),
+                autoDeclare: Inputs::boolValue($params['auto_declare'] ?? $globalAutoDeclare),
                 arguments: $params['arguments'] ?? [],
                 queueBindings: \array_map(
                     fn(array $binding): QueueBinding => new QueueBinding(
@@ -89,7 +90,7 @@ final class ConfigFactory
 
     private function readQueues(): void
     {
-        $globalAutoDeclare = $this->config['auto_declare'] ?? Queue::DEFAULT_AUTO_DECLARE;
+        $globalAutoDeclare = Inputs::boolValue($this->config['auto_declare'] ?? Queue::DEFAULT_AUTO_DECLARE);
         foreach ($this->config['queues'] ?? [] as $name => $params) {
             $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
@@ -99,19 +100,23 @@ final class ConfigFactory
                 connection: $this->connections[$params['connection'] ?? Connection::DEFAULT_CONNECTION_NAME],
                 consumerParameters: new ConsumerParameters(
                     tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
-                    ack: $consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK,
-                    exclusive: $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
-                    local: $consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL,
-                    prefetchCount: $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT,
-                    timeLimit: $consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT,
-                    waitTimeout: $consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT,
-                    messagesLimit: $consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT
+                    ack: Inputs::boolValue($consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK),
+                    exclusive: Inputs::boolValue(
+                        $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE
+                    ),
+                    local: Inputs::boolValue($consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL),
+                    prefetchCount: (int) (
+                        $consumerConfig['prefetch_count'] ?? ConsumerParameters::DEFAULT_PREFETCH_COUNT
+                    ),
+                    timeLimit: (int) ($consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT),
+                    waitTimeout: (int) ($consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT),
+                    messagesLimit: (int) ($consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT)
                 ),
-                passive: $params['passive'] ?? Queue::DEFAULT_PASSIVE,
-                durable: $params['durable'] ?? Queue::DEFAULT_DURABLE,
-                exclusive: $params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE,
-                autoDelete: $params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE,
-                autoDeclare: $params['auto_declare'] ?? $globalAutoDeclare,
+                passive: Inputs::boolValue($params['passive'] ?? Queue::DEFAULT_PASSIVE),
+                durable: Inputs::boolValue($params['durable'] ?? Queue::DEFAULT_DURABLE),
+                exclusive: Inputs::boolValue($params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE),
+                autoDelete: Inputs::boolValue($params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE),
+                autoDeclare: Inputs::boolValue($params['auto_declare'] ?? $globalAutoDeclare),
                 arguments: $params['arguments'] ?? []
             );
         }
@@ -145,7 +150,7 @@ final class ConfigFactory
                 $class,
                 $params['serializer'] ?? DefaultCommandSerializer::class,
                 $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default']),
-                $params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE
+                Inputs::boolValue($params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE)
             );
         }
     }
