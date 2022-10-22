@@ -8,25 +8,24 @@ use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelope;
 use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelopeInterface;
-use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 abstract class AbstractCommandSerializer implements CommandSerializerInterface
 {
     protected SerializerInterface $serializer;
 
+    abstract protected function init(): SerializerInterface;
+
     public function __construct()
     {
         $this->serializer = $this->init();
     }
 
-    abstract protected function init(): SerializerInterface;
-
     public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface
     {
         return new MessageEnvelope(
             $this->serializer->serialize($command, 'json'),
-            \get_class($command),
+            $command::class,
             $properties
         );
     }

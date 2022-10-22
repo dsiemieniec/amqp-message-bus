@@ -1,15 +1,17 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Siemieniec\AsyncCommandBus\Serializer;
 
-use Siemieniec\AsyncCommandBus\Exception\MissingSerializerException;
-use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
+use Siemieniec\AsyncCommandBus\Serializer\MissingSerializerException;
+
+use function sprintf;
 
 final class CommandSerializerRegistry
 {
-    /** @var array<string, CommandSerializerInterface> */
+
+    /** @var array<string, \Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface> */
     private array $serializers;
 
     public function registerSerializer(string $serializerClass, CommandSerializerInterface $serializer): void
@@ -20,9 +22,12 @@ final class CommandSerializerRegistry
     public function getSerializer(string $serializerClass): CommandSerializerInterface
     {
         if (!isset($this->serializers[$serializerClass])) {
-            throw new MissingSerializerException(\sprintf('Serializer %s does not exist', $serializerClass));
+            throw new \Siemieniec\AsyncCommandBus\Serializer\MissingSerializerException(
+                \sprintf('Serializer %s does not exist', $serializerClass)
+            );
         }
 
         return $this->serializers[$serializerClass];
     }
+
 }

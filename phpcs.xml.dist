@@ -17,6 +17,6 @@
     <file>tests/</file>
 
     <rule ref="vendor/slevomat/coding-standard/SlevomatCodingStandard/ruleset.xml">
-        <!-- sniffs to exclude -->
+        <exclude name="SlevomatCodingStandard.Attributes.AttributesOrder" />
     </rule>
 </ruleset>

@@ -1,30 +1,21 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Siemieniec\AsyncCommandBus\Config;
 
-use Siemieniec\AsyncCommandBus\Config\Connection;
-use Siemieniec\AsyncCommandBus\Config\ConnectionsMap;
-use Siemieniec\AsyncCommandBus\Config\ConsumerParameters;
-use Siemieniec\AsyncCommandBus\Config\Exchange;
-use Siemieniec\AsyncCommandBus\Config\ExchangePublishedCommandConfig;
-use Siemieniec\AsyncCommandBus\Config\ExchangesMap;
-use Siemieniec\AsyncCommandBus\Config\Queue;
-use Siemieniec\AsyncCommandBus\Config\QueuePublishedCommandConfig;
-use Siemieniec\AsyncCommandBus\Config\QueuesMap;
-use Siemieniec\AsyncCommandBus\Config\CommandConfig;
-use Siemieniec\AsyncCommandBus\Config\CommandConfigsMap;
-use Siemieniec\AsyncCommandBus\Config\Config;
 use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
 use Siemieniec\AsyncCommandBus\Utils\Inputs;
-use Exception;
+use function array_key_exists;
 
 final class ConfigFactory
 {
+
     private const DEFAULT_QUEUE_NAME = 'async_command_bus';
 
-    /** @var array<string, mixed> */
+    /**
+     * @var array<string, mixed>
+     */
     private array $config = [];
     private ConnectionsMap $connections;
     private ExchangesMap $exchanges;
@@ -36,17 +27,9 @@ final class ConfigFactory
         $this->initMaps();
     }
 
-    private function initMaps(): void
-    {
-        $this->connections = new ConnectionsMap();
-        $this->exchanges = new ExchangesMap();
-        $this->queues = new QueuesMap();
-        $this->commands = new CommandConfigsMap();
-    }
-
     /**
      * @param array<string, mixed> $config
-     * @throws Exception
+     * @throws \Exception
      */
     public function create(array $config): Config
     {
@@ -61,6 +44,14 @@ final class ConfigFactory
         return new Config($this->exchanges, $this->queues, $this->commands);
     }
 
+    private function initMaps(): void
+    {
+        $this->connections = new ConnectionsMap;
+        $this->exchanges = new ExchangesMap;
+        $this->queues = new QueuesMap;
+        $this->commands = new CommandConfigsMap;
+    }
+
     private function readConnections(): void
     {
         foreach ($this->config['connections'] ?? [] as $name => $params) {
@@ -70,7 +61,7 @@ final class ConfigFactory
                 port: (int)$params['port'],
                 user: $params['user'],
                 password: $params['password'],
-                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST
+                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST,
             );
         }
     }
@@ -78,6 +69,7 @@ final class ConfigFactory
     private function readExchanges(): void
     {
         $globalAutoDeclare = Inputs::boolValue($this->config['auto_declare'] ?? Exchange::DEFAULT_AUTO_DECLARE);
+
         foreach ($this->config['exchanges'] ?? [] as $name => $params) {
             $this->exchanges[$name] = new Exchange(
                 name: $params['name'],
@@ -89,13 +81,13 @@ final class ConfigFactory
                 internal: Inputs::boolValue($params['internal'] ?? Exchange::DEFAULT_INTERNAL),
                 autoDeclare: Inputs::boolValue($params['auto_declare'] ?? $globalAutoDeclare),
                 arguments: $params['arguments'] ?? [],
-                queueBindings: \array_map(
-                    fn(array $binding): QueueBinding => new QueueBinding(
+                queueBindings: array_map(
+                    fn (array $binding): QueueBinding => new QueueBinding(
                         $this->queues[$binding['queue']],
-                        $binding['routing_key']
+                        $binding['routing_key'],
                     ),
-                    $params['queue_bindings'] ?? []
-                )
+                    $params['queue_bindings'] ?? [],
+                ),
             );
         }
     }
@@ -103,8 +95,9 @@ final class ConfigFactory
     private function readQueues(): void
     {
         $globalAutoDeclare = Inputs::boolValue($this->config['auto_declare'] ?? Queue::DEFAULT_AUTO_DECLARE);
+
         foreach ($this->config['queues'] ?? [] as $name => $params) {
-            $queueName = $params['name'] ?? ($name === 'default' ? self::DEFAULT_QUEUE_NAME : $name);
+            $queueName = $params['name'] ?? ('default' === $name ? self::DEFAULT_QUEUE_NAME : $name);
             $consumerConfig = $params['consumer'] ?? [];
 
             $this->queues[$name] = new Queue(
@@ -114,7 +107,7 @@ final class ConfigFactory
                     tag: $consumerConfig['tag'] ?? ConsumerParameters::DEFAULT_TAG,
                     ack: Inputs::boolValue($consumerConfig['ack'] ?? ConsumerParameters::DEFAULT_ACK),
                     exclusive: Inputs::boolValue(
-                        $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE
+                        $consumerConfig['exclusive'] ?? ConsumerParameters::DEFAULT_EXCLUSIVE,
                     ),
                     local: Inputs::boolValue($consumerConfig['local'] ?? ConsumerParameters::DEFAULT_LOCAL),
                     prefetchCount: (int) (
@@ -122,25 +115,27 @@ final class ConfigFactory
                     ),
                     timeLimit: (int) ($consumerConfig['time_limit'] ?? ConsumerParameters::NO_LIMIT),
                     waitTimeout: (int) ($consumerConfig['wait_timeout'] ?? ConsumerParameters::NO_LIMIT),
-                    messagesLimit: (int) ($consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT)
+                    messagesLimit: (int) ($consumerConfig['messages_limit'] ?? ConsumerParameters::NO_LIMIT),
                 ),
                 passive: Inputs::boolValue($params['passive'] ?? Queue::DEFAULT_PASSIVE),
                 durable: Inputs::boolValue($params['durable'] ?? Queue::DEFAULT_DURABLE),
                 exclusive: Inputs::boolValue($params['exclusive'] ?? Queue::DEFAULT_EXCLUSIVE),
                 autoDelete: Inputs::boolValue($params['auto_delete'] ?? Queue::DEFAULT_AUTO_DELETE),
                 autoDeclare: Inputs::boolValue($params['auto_declare'] ?? $globalAutoDeclare),
-                arguments: $params['arguments'] ?? []
+                arguments: $params['arguments'] ?? [],
             );
         }
 
-        if (!isset($this->queues['default'])) {
-            $this->queues['default'] = new Queue(
-                self::DEFAULT_QUEUE_NAME,
-                $this->connections['default'],
-                new ConsumerParameters(),
-                autoDeclare: $globalAutoDeclare
-            );
+        if (isset($this->queues['default'])) {
+            return;
         }
+
+        $this->queues['default'] = new Queue(
+            self::DEFAULT_QUEUE_NAME,
+            $this->connections['default'],
+            new ConsumerParameters(),
+            autoDeclare: $globalAutoDeclare
+        );
     }
 
     private function readCommandPublishers(): void
@@ -148,13 +143,14 @@ final class ConfigFactory
         foreach ($this->config['commands'] ?? [] as $class => $params) {
             $publisherConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
-            if (\array_key_exists('queue', $publisherConfig)) {
+
+            if (array_key_exists('queue', $publisherConfig)) {
                 $publisherConfig = new QueuePublishedCommandConfig($this->queues[$publisherConfig['queue']]);
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
                 $publisherConfig = new ExchangePublishedCommandConfig(
                     $this->exchanges[$exchangePublisherConfig['name']],
-                    $exchangePublisherConfig['routing_key'] ?? ''
+                    $exchangePublisherConfig['routing_key'] ?? '',
                 );
             }
 
@@ -162,8 +158,9 @@ final class ConfigFactory
                 $class,
                 $params['serializer'] ?? DefaultCommandSerializer::class,
                 $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default']),
-                Inputs::boolValue($params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE)
+                Inputs::boolValue($params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE),
             );
         }
     }
+
 }

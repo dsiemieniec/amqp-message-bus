@@ -1,22 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siemieniec\AsyncCommandBus\Tests\Rabbit;
 
+use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
+use PHPUnit\Framework\TestCase;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
 use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelope;
 use Siemieniec\AsyncCommandBus\Rabbit\MessageTransformer;
-use PhpAmqpLib\Message\AMQPMessage;
-use PhpAmqpLib\Wire\AMQPTable;
-use PHPUnit\Framework\TestCase;
 
-class MessageTransformerTest extends TestCase
+final class MessageTransformerTest extends TestCase
 {
-    private function getTransformer(): MessageTransformer
-    {
-        return new MessageTransformer();
-    }
-
     public function testShouldTransformMessage(): void
     {
         $body = 'Test message body';
@@ -36,7 +33,7 @@ class MessageTransformerTest extends TestCase
         $clusterId = 'test-cluster-id';
         $headers = [
             'first-header' => 'first-header-value',
-            'second-header' => 'second-header-value'
+            'second-header' => 'second-header-value',
         ];
 
         $properties = [
@@ -53,7 +50,7 @@ class MessageTransformerTest extends TestCase
             'user_id' => $userId,
             'app_id' => $appId,
             'cluster_id' => $clusterId,
-            'application_headers' => new AMQPTable($headers)
+            'application_headers' => new AMQPTable($headers),
         ];
 
         $message = $this->createMock(AMQPMessage::class);
@@ -112,7 +109,7 @@ class MessageTransformerTest extends TestCase
         $clusterId = 'test-cluster-id';
         $headers = new AMQPTable([
             'first-header' => 'first-header-value',
-            'second-header' => 'second-header-value'
+            'second-header' => 'second-header-value',
         ]);
 
         $properties = CommandProperties::builder()
@@ -164,5 +161,10 @@ class MessageTransformerTest extends TestCase
 
         self::assertEquals($body, $message->getBody());
         self::assertEquals($commandClass, $properties['type']);
+    }
+
+    private function getTransformer(): MessageTransformer
+    {
+        return new MessageTransformer();
     }
 }

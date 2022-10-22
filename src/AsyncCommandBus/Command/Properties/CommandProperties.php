@@ -1,21 +1,22 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Siemieniec\AsyncCommandBus\Command\Properties;
 
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertiesBuilder;
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface;
-use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
-use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryModeProperty;
-use Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface;
-use Siemieniec\AsyncCommandBus\Command\Properties\Headers;
-use Siemieniec\AsyncCommandBus\Command\Properties\IntegerProperty;
-use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey;
-use Siemieniec\AsyncCommandBus\Command\Properties\StringProperty;
 use ArrayAccess;
-use InvalidArgumentException;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
+
+use function get_debug_type;
+use function is_string;
+use function sprintf;
+
+use Siemieniec\AsyncCommandBus\Command\Properties\InvalidArgumentException;
+
+use function array_key_exists;
+use function implode;
+use function array_map;
+use function is_integer;
 
 /**
  * @method string contentType()
@@ -32,17 +33,16 @@ use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter
  * @method string clusterId()
  * @method array headers()
  */
-class CommandProperties implements ArrayAccess
+final class CommandProperties implements ArrayAccess
 {
-    /**
-     * @var array<string, CommandPropertyInterface>
-     */
+    /** @var array<string, \Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface> */
     private array $properties = [];
     private CamelCaseToSnakeCaseNameConverter $nameConverter;
 
     public function __construct(CommandPropertyInterface ...$properties)
     {
         $this->nameConverter = new CamelCaseToSnakeCaseNameConverter();
+
         foreach ($properties as $property) {
             $this[] = $property;
         }
@@ -59,34 +59,28 @@ class CommandProperties implements ArrayAccess
      */
     public function __call(string $name, array $arguments): int|string|array|null
     {
-        if ($name !== 'headers') {
-            $name = $this->nameConverter->normalize($name);
-        } else {
-            $name = PropertyKey::Headers;
-        }
+        $name = $name !== 'headers'
+            ? $this->nameConverter->normalize($name)
+            : PropertyKey::Headers;
 
         return $this[$name]?->getValue();
     }
 
-    /**
-     * @param PropertyKey|string $offset
-     */
+    /** @param \Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey|string $offset */
     public function offsetExists(mixed $offset): bool
     {
-        return \array_key_exists($this->getPropertyKey($offset)->value, $this->properties);
+        return array_key_exists($this->getPropertyKey($offset)->value, $this->properties);
     }
 
-    /**
-     * @param PropertyKey|string $offset
-     */
+    /** @param \Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey|string $offset */
     public function offsetGet(mixed $offset): ?CommandPropertyInterface
     {
         return $this->properties[$this->getPropertyKey($offset)->value] ?? null;
     }
 
     /**
-     * @param PropertyKey|string|null $offset
-     * @param CommandPropertyInterface|HeaderInterface|DeliveryMode|string|integer $value
+     * @param \Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey|string|null $offset
+     * @param \Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface|\Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface|\Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode|string|int $value
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
@@ -94,7 +88,10 @@ class CommandProperties implements ArrayAccess
             if (!($value instanceof CommandPropertyInterface) && !($value instanceof HeaderInterface)) {
                 throw new InvalidArgumentException('Unknown property');
             }
-            $key = $value instanceof HeaderInterface ? PropertyKey::Headers : $value->getKey();
+
+            $key = $value instanceof HeaderInterface
+                ? PropertyKey::Headers
+                : $value->getKey();
         } else {
             $key = $this->getPropertyKey($offset);
         }
@@ -103,6 +100,7 @@ class CommandProperties implements ArrayAccess
             if (!isset($this->properties[PropertyKey::Headers->value])) {
                 $this->properties[PropertyKey::Headers->value] = new Headers();
             }
+
             $this->properties[PropertyKey::Headers->value][] = $value;
         } else {
             $this->properties[$key->value] = $this->getProperty($key, $value);
@@ -114,12 +112,11 @@ class CommandProperties implements ArrayAccess
         unset($this->properties[$this->getPropertyKey($offset)->value]);
     }
 
-    /**
-     * @return array<string, int|string|array<string, string>>
-     */
+    /** @return array<string, int|string|array<string, string>> */
     public function toArray(): array
     {
         $result = [];
+
         foreach ($this->properties as $key => $value) {
             $result[$key] = $value->getValue();
         }
@@ -133,21 +130,22 @@ class CommandProperties implements ArrayAccess
             return $offset;
         }
 
-        if (\is_string($offset)) {
+        if (is_string($offset)) {
             $key = PropertyKey::tryFrom($offset);
+
             if ($key !== null) {
                 return $key;
             }
         }
 
         throw new InvalidArgumentException(
-            \sprintf(
+            sprintf(
                 'Invalid offset %s Allowed values %s',
                 $offset,
-                \implode(
+                implode(
                     ', ',
-                    \array_map(
-                        fn(PropertyKey $propertyKey): string => $propertyKey->value,
+                    array_map(
+                        static fn (PropertyKey $propertyKey): string => $propertyKey->value,
                         PropertyKey::cases()
                     )
                 )
@@ -172,12 +170,14 @@ class CommandProperties implements ArrayAccess
             case PropertyKey::Type:
             case PropertyKey::UserId:
                 $this->assertStringProperty($key, $value);
+
                 return new StringProperty($key, $value);
 
             case PropertyKey::Expiration:
             case PropertyKey::Priority:
             case PropertyKey::Timestamp:
                 $this->assertIntegerProperty($key, $value);
+
                 return new IntegerProperty($key, $value);
 
             case PropertyKey::DeliveryMode:
@@ -192,10 +192,10 @@ class CommandProperties implements ArrayAccess
     {
         if (!is_string($value)) {
             throw new InvalidArgumentException(
-                \sprintf(
+                sprintf(
                     'Property %s expects string but %s given',
                     $key->value,
-                    \get_debug_type($value)
+                    get_debug_type($value)
                 )
             );
         }
@@ -205,10 +205,10 @@ class CommandProperties implements ArrayAccess
     {
         if (!is_integer($value)) {
             throw new InvalidArgumentException(
-                \sprintf(
+                sprintf(
                     'Property %s expects integer but %s given',
                     $key->value,
-                    \get_debug_type($value)
+                    get_debug_type($value)
                 )
             );
         }

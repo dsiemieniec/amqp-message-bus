@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siemieniec\AsyncCommandBus\Tests\Command\Properties;
 
+use PHPUnit\Framework\TestCase;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
-use PHPUnit\Framework\TestCase;
 
-class CommandPropertiesTest extends TestCase
+final class CommandPropertiesTest extends TestCase
 {
     public function testShouldCreateCommandProperties(): void
     {
@@ -43,7 +45,7 @@ class CommandPropertiesTest extends TestCase
         $headers = $commandProperties->headers();
         $expectedHeaders = [
             'first-header' => 'first-header-value',
-            'second-header' => 'second-header-value'
+            'second-header' => 'second-header-value',
         ];
         self::assertEquals($expectedHeaders, $headers);
     }
