@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Tests\Command\Properties;
+namespace Siemieniec\AsyncCommandBus\Tests\Command\Properties;
 
-use App\Command\Properties\CommandProperties;
-use App\Command\Properties\DeliveryMode;
+use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
+use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
 use PHPUnit\Framework\TestCase;
 
 class CommandPropertiesTest extends TestCase

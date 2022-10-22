@@ -32,12 +32,13 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/Playground/",
+            "Siemieniec\\AsyncCommandBus\\": "src/AsyncCommandBus/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "tests/"
+            "Siemieniec\\AsyncCommandBus\\Tests\\": "tests/"
         }
     },
     "replace": {

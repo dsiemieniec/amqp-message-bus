@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Tests\Serializer;
+namespace Siemieniec\AsyncCommandBus\Tests\Serializer;
 
-use App\Command\Properties\CommandProperties;
+use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
-use App\Serializer\DefaultCommandSerializer;
+use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
 
 class CommandSerializerTest extends TestCase

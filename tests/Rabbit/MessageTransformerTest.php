@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Tests\Rabbit;
+namespace Siemieniec\AsyncCommandBus\Tests\Rabbit;
 
-use App\Command\Properties\CommandProperties;
-use App\Command\Properties\DeliveryMode;
-use App\Rabbit\MessageEnvelope;
-use App\Rabbit\MessageTransformer;
+use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
+use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
+use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelope;
+use Siemieniec\AsyncCommandBus\Rabbit\MessageTransformer;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;

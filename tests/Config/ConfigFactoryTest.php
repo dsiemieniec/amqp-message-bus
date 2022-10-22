@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Tests\Config;
+namespace Siemieniec\AsyncCommandBus\Tests\Config;
 
-use App\Config\ConfigFactory;
-use App\Config\Queue;
-use App\Exception\MissingConnectionException;
-use App\Exception\MissingExchangeException;
-use App\Exception\MissingQueueException;
-use App\Serializer\DefaultCommandSerializer;
+use Siemieniec\AsyncCommandBus\Config\ConfigFactory;
+use Siemieniec\AsyncCommandBus\Config\Queue;
+use Siemieniec\AsyncCommandBus\Exception\MissingConnectionException;
+use Siemieniec\AsyncCommandBus\Exception\MissingExchangeException;
+use Siemieniec\AsyncCommandBus\Exception\MissingQueueException;
+use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

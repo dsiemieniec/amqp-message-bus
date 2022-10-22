@@ -76,16 +76,19 @@ services:
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
-        resource: '../src/'
+        resource: '../src/Playground/'
         exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+            - '../src/Playground/DependencyInjection/'
+            - '../src/Playground/Entity/'
+            - '../src/Playground/Kernel.php'
+
+    Siemieniec\AsyncCommandBus\:
+        resource: '../src/AsyncCommandBus/'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Config\ConfigFactory: ~
+    Siemieniec\AsyncCommandBus\ConfigFactory: ~
 
-    App\Config\Config:
-        factory: ['@App\Config\ConfigFactory', 'create']
+    Siemieniec\AsyncCommandBus\Config\Config:
+        factory: ['@Siemieniec\AsyncCommandBus\Config\ConfigFactory', 'create']
         arguments: ['%async_command_bus%']
