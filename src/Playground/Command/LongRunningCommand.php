@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
-
-class LongRunningCommand implements CommandInterface
+class LongRunningCommand
 {
     public function __construct(
         private int $seconds,

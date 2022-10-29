@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Config;
 
+use Exception;
 use Siemieniec\AsyncCommandBus\Config\Connection;
 use Siemieniec\AsyncCommandBus\Config\ConnectionsMap;
 use Siemieniec\AsyncCommandBus\Config\ConsumerParameters;

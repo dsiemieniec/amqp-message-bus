@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Rabbit;
 
-use Siemieniec\AsyncCommandBus\Config\CommandPublisherConfig;
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Config\CommandConfig;
 use Siemieniec\AsyncCommandBus\Config\Config;
@@ -35,7 +33,7 @@ class CommandPublisher implements CommandPublisherInterface
     ) {
     }
 
-    public function publish(CommandInterface $command, ?CommandProperties $commandProperties = null): void
+    public function publish(object $command, ?CommandProperties $commandProperties = null): void
     {
         $message = $this->transformer->transformEnvelope(
             $this->serializer->serialize($command, $commandProperties),
@@ -79,12 +77,12 @@ class CommandPublisher implements CommandPublisherInterface
         $this->declaredCommands[$commandConfig->getCommandClass()] = true;
     }
 
-    private function declareQueue(CommandPublisherConfig|QueuePublishedCommandConfig $publisherConfig): void
+    private function declareQueue(QueuePublishedCommandConfig $publisherConfig): void
     {
         $this->getConnection($publisherConfig->getConnection())->declareQueue($publisherConfig->getQueue());
     }
 
-    private function declareExchange(ExchangePublishedCommandConfig|CommandPublisherConfig $publisherConfig): void
+    private function declareExchange(ExchangePublishedCommandConfig $publisherConfig): void
     {
         $connection = $this->getConnection($publisherConfig->getConnection());
         $connection->declareExchange($publisherConfig->getExchange());

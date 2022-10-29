@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App;
 
 use Siemieniec\AsyncCommandBus\DependencyInjection\CommandSerializerRegistryCompilerPass;
-use Siemieniec\AsyncCommandBus\DependencyInjection\DebugConfigCommandCompilerPass;
 use Siemieniec\AsyncCommandBus\DependencyInjection\HandlerRegistryCompilerPass;
 use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
 use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
@@ -31,6 +30,5 @@ class Kernel extends BaseKernel
 
         $container->addCompilerPass(new HandlerRegistryCompilerPass());
         $container->addCompilerPass(new CommandSerializerRegistryCompilerPass());
-        $container->addCompilerPass(new DebugConfigCommandCompilerPass());
     }
 }

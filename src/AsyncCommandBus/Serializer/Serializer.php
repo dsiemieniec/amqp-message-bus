@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Serializer;
 
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Config\Config;
 use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelopeInterface;
@@ -18,14 +17,14 @@ final class Serializer
     }
 
     public function serialize(
-        CommandInterface $command,
+        object $command,
         ?CommandProperties $properties = null
     ): MessageEnvelopeInterface {
         return $this->getSerializer(\get_class($command))
             ->serialize($command, $properties ?: new CommandProperties());
     }
 
-    public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface
+    public function deserialize(MessageEnvelopeInterface $envelope): object
     {
         return $this->getSerializer($envelope->getCommandClass())->deserialize($envelope);
     }

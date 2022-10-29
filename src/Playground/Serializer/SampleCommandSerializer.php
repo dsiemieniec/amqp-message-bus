@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Serializer;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Exception\DeserializationException;
 use Siemieniec\AsyncCommandBus\Exception\SerializationException;
@@ -16,11 +15,10 @@ use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
 
 class SampleCommandSerializer implements CommandSerializerInterface
 {
-    /**
-     * @param AnotherSimpleCommand $command
-     */
-    public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface
+    public function serialize(object $command, CommandProperties $properties): MessageEnvelopeInterface
     {
+        /** @var AnotherSimpleCommand $command */
+
         $body = \json_encode([
             'first_text' => $command->getFirstText(),
             'second_text' => $command->getSecondText(),
@@ -33,7 +31,7 @@ class SampleCommandSerializer implements CommandSerializerInterface
         return new MessageEnvelope($body, \get_class($command), $properties);
     }
 
-    public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface
+    public function deserialize(MessageEnvelopeInterface $envelope): AnotherSimpleCommand
     {
         $data = \json_decode((string)$envelope->getBody(), true);
 

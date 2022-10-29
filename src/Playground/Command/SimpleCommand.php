@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
-
-class SimpleCommand implements CommandInterface
+class SimpleCommand
 {
     public function __construct(
         private int $id,

@@ -6,7 +6,6 @@ namespace App\Cli;
 
 use App\Command\AnotherSimpleCommand;
 use Siemieniec\AsyncCommandBus\Command\CommandBusInterface;
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use App\Command\DispatchedToOwnQueueCommand;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
@@ -31,7 +30,7 @@ class SimulatePublishingCommand extends Command
         parent::__construct();
     }
 
-    public function getRandomCommand(): CommandInterface
+    public function getRandomCommand(): object
     {
         $i = \random_int(0, 2);
         if ($i === 0) {

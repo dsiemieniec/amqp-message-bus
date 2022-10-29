@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Siemieniec\AsyncCommandBus\Command;
 
 use Siemieniec\AsyncCommandBus\Command\CommandBusInterface;
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Exception\CommandBusException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistryInterface;
@@ -20,7 +19,7 @@ final class CommandBus implements CommandBusInterface
     ) {
     }
 
-    public function execute(CommandInterface $command): void
+    public function execute(object $command): void
     {
         $handler = $this->handlerRegistry->getHandler($command);
         if (!\is_callable($handler)) {
@@ -38,7 +37,7 @@ final class CommandBus implements CommandBusInterface
         }
     }
 
-    public function executeAsync(CommandInterface $command, ?CommandProperties $properties = null): void
+    public function executeAsync(object $command, ?CommandProperties $properties = null): void
     {
         try {
             $this->commandPublisher->publish($command, $properties);

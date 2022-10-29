@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Command;
 
 use DateTimeInterface;
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 
-class AnotherSimpleCommand implements CommandInterface
+class AnotherSimpleCommand
 {
     public function __construct(
         private string $firstText,

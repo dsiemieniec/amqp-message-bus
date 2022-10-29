@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Handler;
 
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Exception\HandlerDuplicateException;
 use Siemieniec\AsyncCommandBus\Exception\HandlerMissingException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistryInterface;
@@ -32,7 +31,7 @@ final class HandlerRegistry implements HandlerRegistryInterface
         $this->registry[$commandClass] = $handler;
     }
 
-    public function getHandler(CommandInterface $command): HandlerInterface
+    public function getHandler(object $command): HandlerInterface
     {
         return $this->getHandlerByClass(\get_class($command));
     }
