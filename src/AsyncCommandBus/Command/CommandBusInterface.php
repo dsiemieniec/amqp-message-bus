@@ -6,8 +6,6 @@ namespace Siemieniec\AsyncCommandBus\Command;
 
 use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
-use Siemieniec\AsyncCommandBus\Exception\CommandBusException;
-use App\Utils\Delay;
 
 interface CommandBusInterface
 {

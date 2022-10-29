@@ -18,7 +18,6 @@ use Siemieniec\AsyncCommandBus\Config\CommandConfigsMap;
 use Siemieniec\AsyncCommandBus\Config\Config;
 use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
 use Siemieniec\AsyncCommandBus\Utils\Inputs;
-use Exception;
 
 final class ConfigFactory
 {
@@ -36,14 +35,6 @@ final class ConfigFactory
         $this->initMaps();
     }
 
-    private function initMaps(): void
-    {
-        $this->connections = new ConnectionsMap();
-        $this->exchanges = new ExchangesMap();
-        $this->queues = new QueuesMap();
-        $this->commands = new CommandConfigsMap();
-    }
-
     /**
      * @param array<string, mixed> $config
      * @throws Exception
@@ -59,6 +50,14 @@ final class ConfigFactory
         $this->readCommandPublishers();
 
         return new Config($this->exchanges, $this->queues, $this->commands);
+    }
+
+    private function initMaps(): void
+    {
+        $this->connections = new ConnectionsMap();
+        $this->exchanges = new ExchangesMap();
+        $this->queues = new QueuesMap();
+        $this->commands = new CommandConfigsMap();
     }
 
     private function readConnections(): void

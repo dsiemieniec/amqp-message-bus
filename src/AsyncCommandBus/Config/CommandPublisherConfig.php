@@ -10,5 +10,6 @@ use Siemieniec\AsyncCommandBus\Config\PublisherTarget;
 interface CommandPublisherConfig
 {
     public function getPublisherTarget(): PublisherTarget;
+
     public function getConnection(): Connection;
 }

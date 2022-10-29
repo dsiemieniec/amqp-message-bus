@@ -13,11 +13,13 @@ abstract class AbstractMap implements ArrayAccess, Countable, Iterator
 {
     /** @var array<string, mixed> */
     protected array $items = [];
+
     /** @var array<string> */
     protected array $keys = [];
     protected int $position = 0;
 
     abstract protected function getValueType(): string;
+
     abstract protected function onMissingOffset(mixed $offset): mixed;
 
     /**

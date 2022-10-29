@@ -15,12 +15,12 @@ abstract class AbstractCommandSerializer implements CommandSerializerInterface
 {
     protected SerializerInterface $serializer;
 
+    abstract protected function init(): SerializerInterface;
+
     public function __construct()
     {
         $this->serializer = $this->init();
     }
-
-    abstract protected function init(): SerializerInterface;
 
     public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface
     {

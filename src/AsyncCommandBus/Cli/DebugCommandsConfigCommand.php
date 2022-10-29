@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siemieniec\AsyncCommandBus\Cli;
 
-use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Config\Config;
 use Siemieniec\AsyncCommandBus\Exception\HandlerMissingException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistry;

@@ -6,7 +6,6 @@ namespace Siemieniec\AsyncCommandBus\Rabbit;
 
 use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
-use App\Utils\Delay;
 
 interface CommandPublisherInterface
 {

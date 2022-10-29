@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Rabbit;
 
-use Siemieniec\AsyncCommandBus\Rabbit\CommandPublisherInterface;
-use Siemieniec\AsyncCommandBus\Rabbit\ConnectionInterface;
-use Siemieniec\AsyncCommandBus\Rabbit\MessageTransformerInterface;
-use Siemieniec\AsyncCommandBus\Rabbit\RabbitConnection;
+use Siemieniec\AsyncCommandBus\Config\CommandPublisherConfig;
 use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Config\CommandConfig;
@@ -24,6 +21,7 @@ class CommandPublisher implements CommandPublisherInterface
      * @var array<string, ConnectionInterface>
      */
     private array $connections = [];
+
     /**
      * @var array<string, bool>
      */
@@ -70,30 +68,40 @@ class CommandPublisher implements CommandPublisherInterface
 
         $publisherConfig = $commandConfig->getPublisherConfig();
         if ($publisherConfig instanceof QueuePublishedCommandConfig && $publisherConfig->getQueue()->canAutoDeclare()) {
-            $this->getConnection($publisherConfig->getConnection())->declareQueue($publisherConfig->getQueue());
+            $this->declareQueue($publisherConfig);
         } elseif (
             $publisherConfig instanceof ExchangePublishedCommandConfig
             && $publisherConfig->getExchange()->canAutoDeclare()
         ) {
-            $connection = $this->getConnection($publisherConfig->getConnection());
-            $connection->declareExchange($publisherConfig->getExchange());
-            foreach ($publisherConfig->getExchange()->getQueueBindings() as $queueBinding) {
-                if (!$queueBinding->getQueue()->canAutoDeclare()) {
-                    $logMessage = \sprintf(
-                        'Cannot declare binding to %s (routing_key: %s) because queue has disabled auto_declaration',
-                        $queueBinding->getQueue()->getName(),
-                        $queueBinding->getRoutingKey()
-                    );
-                    $this->logger->warning($logMessage);
-
-                    continue;
-                }
-
-                $connection->declareQueue($queueBinding->getQueue());
-                $connection->bindQueue($publisherConfig->getExchange(), $queueBinding);
-            }
+            $this->declareExchange($publisherConfig);
         }
 
         $this->declaredCommands[$commandConfig->getCommandClass()] = true;
+    }
+
+    private function declareQueue(CommandPublisherConfig|QueuePublishedCommandConfig $publisherConfig): void
+    {
+        $this->getConnection($publisherConfig->getConnection())->declareQueue($publisherConfig->getQueue());
+    }
+
+    private function declareExchange(ExchangePublishedCommandConfig|CommandPublisherConfig $publisherConfig): void
+    {
+        $connection = $this->getConnection($publisherConfig->getConnection());
+        $connection->declareExchange($publisherConfig->getExchange());
+        foreach ($publisherConfig->getExchange()->getQueueBindings() as $queueBinding) {
+            if (!$queueBinding->getQueue()->canAutoDeclare()) {
+                $logMessage = \sprintf(
+                    'Cannot declare binding to %s (routing_key: %s) because queue has disabled auto_declaration',
+                    $queueBinding->getQueue()->getName(),
+                    $queueBinding->getRoutingKey()
+                );
+                $this->logger->warning($logMessage);
+
+                continue;
+            }
+
+            $connection->declareQueue($queueBinding->getQueue());
+            $connection->bindQueue($publisherConfig->getExchange(), $queueBinding);
+        }
     }
 }

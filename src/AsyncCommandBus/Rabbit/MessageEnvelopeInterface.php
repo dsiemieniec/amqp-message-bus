@@ -10,6 +10,8 @@ use Stringable;
 interface MessageEnvelopeInterface
 {
     public function getCommandClass(): string;
+
     public function getBody(): Stringable|string;
+
     public function getProperties(): CommandProperties;
 }

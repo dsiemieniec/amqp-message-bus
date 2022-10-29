@@ -18,6 +18,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Siemieniec\AsyncCommandBus\Rabbit\ConnectionInterface;
 use Siemieniec\AsyncCommandBus\Rabbit\ConsumerCallbackInterface;
+use Siemieniec\AsyncCommandBus\Rabbit\ConsumerCallbackInterface as RabbitConsumerCallbackInterface;
 
 class RabbitConnection implements ConnectionInterface
 {
@@ -96,37 +97,8 @@ class RabbitConnection implements ConnectionInterface
 
     public function consume(Queue $queue, ConsumerCallbackInterface $callback): void
     {
-        $this->consumerStopped = false;
-        $parameters = $queue->getConsumerParameters();
-
-        $this->channel->basic_qos(0, 1, false);
-        $this->channel->basic_consume(
-            $queue->getName(),
-            $parameters->getTag(),
-            !$parameters->isLocal(),
-            !$parameters->isAck(),
-            $parameters->isExclusive(),
-            false,
-            fn(AMQPMessage $message) => $callback->onMessage($message, $this)
-        );
-
-        $startedAt = \time();
-        $i = 0;
-        while ($this->channel->is_open() && !$this->consumerStopped) {
-            $timeout = $this->calculateTimeout($startedAt, $parameters);
-            if ($timeout > 0 && $timeout <= 1) {
-                $this->stopConsumer();
-            }
-            $this->channel->wait(null, false, $timeout);
-            if ($parameters->hasMessagesLimit() && ++$i >= $parameters->getMessagesLimit()) {
-                $this->stopConsumer();
-                throw new MessageLimitException($parameters->getMessagesLimit());
-            }
-            if ($this->timeLimitExceeded($startedAt, $parameters)) {
-                $this->stopConsumer();
-                throw new TimeLimitException($parameters->getTimeLimit());
-            }
-        }
+        $this->initializeConsumer($queue, $callback);
+        $this->runConsumer($queue);
     }
 
     public function stopConsumer(): void
@@ -154,5 +126,56 @@ class RabbitConnection implements ConnectionInterface
     private function timeLimitExceeded(int $startedAt, ConsumerParameters $parameters): bool
     {
         return $parameters->hasTimeLimit() && \time() >= $startedAt + $parameters->getTimeLimit();
+    }
+
+    private function initializeConsumer(Queue $queue, RabbitConsumerCallbackInterface $callback): void
+    {
+        $this->consumerStopped = false;
+        $parameters = $queue->getConsumerParameters();
+
+        $this->channel->basic_qos(0, 1, false);
+        $this->channel->basic_consume(
+            $queue->getName(),
+            $parameters->getTag(),
+            !$parameters->isLocal(),
+            !$parameters->isAck(),
+            $parameters->isExclusive(),
+            false,
+            fn(AMQPMessage $message) => $callback->onMessage($message, $this)
+        );
+    }
+
+    private function runConsumer(Queue $queue): void
+    {
+        $parameters = $queue->getConsumerParameters();
+
+        $startedAt = \time();
+        $consumedMessages = 0;
+        while ($this->channel->is_open() && !$this->consumerStopped) {
+            $timeout = $this->calculateTimeout($startedAt, $parameters);
+            if ($timeout > 0 && $timeout <= 1) {
+                $this->stopConsumer();
+            }
+            $this->channel->wait(null, false, $timeout);
+            ++$consumedMessages;
+            $this->assertConsumedMessagesLimit($parameters, $consumedMessages);
+            $this->assertConsumerTimeLimit($startedAt, $parameters);
+        }
+    }
+
+    private function assertConsumedMessagesLimit(ConsumerParameters $parameters, int $consumedMessages): void
+    {
+        if ($parameters->hasMessagesLimit() && $consumedMessages >= $parameters->getMessagesLimit()) {
+            $this->stopConsumer();
+            throw new MessageLimitException($parameters->getMessagesLimit());
+        }
+    }
+
+    private function assertConsumerTimeLimit(int $startedAt, ConsumerParameters $parameters): void
+    {
+        if ($this->timeLimitExceeded($startedAt, $parameters)) {
+            $this->stopConsumer();
+            throw new TimeLimitException($parameters->getTimeLimit());
+        }
     }
 }

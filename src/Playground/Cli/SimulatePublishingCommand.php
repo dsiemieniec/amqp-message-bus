@@ -31,6 +31,22 @@ class SimulatePublishingCommand extends Command
         parent::__construct();
     }
 
+    public function getRandomCommand(): CommandInterface
+    {
+        $i = \random_int(0, 2);
+        if ($i === 0) {
+            return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
+        } elseif ($i === 1) {
+            return new AnotherSimpleCommand(
+                \uniqid('', true),
+                \uniqid('', true),
+                new DateTimeImmutable()
+            );
+        }
+
+        return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));
+    }
+
     protected function configure(): void
     {
         $this
@@ -58,21 +74,5 @@ class SimulatePublishingCommand extends Command
         $io->success('Done');
 
         return Command::SUCCESS;
-    }
-
-    public function getRandomCommand(): CommandInterface
-    {
-        $i = \random_int(0, 2);
-        if ($i === 0) {
-            return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
-        } elseif ($i === 1) {
-            return new AnotherSimpleCommand(
-                \uniqid('', true),
-                \uniqid('', true),
-                new DateTimeImmutable()
-            );
-        }
-
-        return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));
     }
 }

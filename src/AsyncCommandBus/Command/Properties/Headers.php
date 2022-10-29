@@ -6,7 +6,6 @@ namespace Siemieniec\AsyncCommandBus\Command\Properties;
 
 use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface;
-use ArrayAccess;
 use InvalidArgumentException;
 use Siemieniec\AsyncCommandBus\Command\Properties\BasicHeader;
 use Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface;
@@ -66,7 +65,6 @@ class Headers implements CommandPropertyInterface
     /**
      * @param string|null $offset
      * @param string|HeaderInterface $value
-     * @return void
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
@@ -95,7 +93,7 @@ class Headers implements CommandPropertyInterface
 
     private function assertOffsetType(mixed $offset): void
     {
-        if (!is_string($offset)) {
+        if (!\is_string($offset)) {
             throw new InvalidArgumentException(
                 \sprintf(
                     'Invalid offset type. Expected string but %s given',
@@ -107,7 +105,7 @@ class Headers implements CommandPropertyInterface
 
     private function assertValueType(mixed $value): void
     {
-        if (!is_string($value) && !($value instanceof HeaderInterface)) {
+        if (!\is_string($value) && !($value instanceof HeaderInterface)) {
             throw new InvalidArgumentException(
                 \sprintf(
                     'Invalid header value type. Expected string or %s but %s given',

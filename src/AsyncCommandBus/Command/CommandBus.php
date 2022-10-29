@@ -10,7 +10,6 @@ use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
 use Siemieniec\AsyncCommandBus\Exception\CommandBusException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistryInterface;
 use Siemieniec\AsyncCommandBus\Rabbit\CommandPublisherInterface;
-use App\Utils\Delay;
 use Throwable;
 
 final class CommandBus implements CommandBusInterface

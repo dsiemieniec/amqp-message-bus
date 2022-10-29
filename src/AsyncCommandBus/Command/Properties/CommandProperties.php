@@ -6,12 +6,12 @@ namespace Siemieniec\AsyncCommandBus\Command\Properties;
 
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertiesBuilder;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface;
-use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
 use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryModeProperty;
 use Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\Headers;
 use Siemieniec\AsyncCommandBus\Command\Properties\IntegerProperty;
 use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey;
+use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey as PropertyKeyEnum;
 use Siemieniec\AsyncCommandBus\Command\Properties\StringProperty;
 use ArrayAccess;
 use InvalidArgumentException;
@@ -48,26 +48,6 @@ class CommandProperties implements ArrayAccess
         }
     }
 
-    public static function builder(): CommandPropertiesBuilder
-    {
-        return new CommandPropertiesBuilder();
-    }
-
-    /**
-     * @param array<int|string, mixed> $arguments
-     * @return int|string|array<string, string>|null
-     */
-    public function __call(string $name, array $arguments): int|string|array|null
-    {
-        if ($name !== 'headers') {
-            $name = $this->nameConverter->normalize($name);
-        } else {
-            $name = PropertyKey::Headers;
-        }
-
-        return $this[$name]?->getValue();
-    }
-
     /**
      * @param PropertyKey|string $offset
      */
@@ -90,23 +70,10 @@ class CommandProperties implements ArrayAccess
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        if ($offset === null) {
-            if (!($value instanceof CommandPropertyInterface) && !($value instanceof HeaderInterface)) {
-                throw new InvalidArgumentException('Unknown property');
-            }
-            $key = $value instanceof HeaderInterface ? PropertyKey::Headers : $value->getKey();
-        } else {
-            $key = $this->getPropertyKey($offset);
-        }
-
-        if ($key->equals(PropertyKey::Headers)) {
-            if (!isset($this->properties[PropertyKey::Headers->value])) {
-                $this->properties[PropertyKey::Headers->value] = new Headers();
-            }
-            $this->properties[PropertyKey::Headers->value][] = $value;
-        } else {
-            $this->properties[$key->value] = $this->getProperty($key, $value);
-        }
+        $this->setPropertyValue(
+            $this->getOffsetKey($offset, $value),
+            $value
+        );
     }
 
     public function offsetUnset(mixed $offset): void
@@ -125,6 +92,11 @@ class CommandProperties implements ArrayAccess
         }
 
         return $result;
+    }
+
+    public static function builder(): CommandPropertiesBuilder
+    {
+        return new CommandPropertiesBuilder();
     }
 
     private function getPropertyKey(mixed $offset): PropertyKey
@@ -190,7 +162,7 @@ class CommandProperties implements ArrayAccess
 
     private function assertStringProperty(PropertyKey $key, mixed $value): void
     {
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             throw new InvalidArgumentException(
                 \sprintf(
                     'Property %s expects string but %s given',
@@ -203,7 +175,7 @@ class CommandProperties implements ArrayAccess
 
     private function assertIntegerProperty(PropertyKey $key, mixed $value): void
     {
-        if (!is_integer($value)) {
+        if (!\is_integer($value)) {
             throw new InvalidArgumentException(
                 \sprintf(
                     'Property %s expects integer but %s given',
@@ -212,5 +184,45 @@ class CommandProperties implements ArrayAccess
                 )
             );
         }
+    }
+
+    private function getOffsetKey(mixed $offset, mixed $value): PropertyKeyEnum
+    {
+        if ($offset !== null) {
+            return $this->getPropertyKey($offset);
+        }
+
+        if (!($value instanceof CommandPropertyInterface) && !($value instanceof HeaderInterface)) {
+            throw new InvalidArgumentException('Unknown property');
+        }
+
+        return $value instanceof HeaderInterface ? PropertyKey::Headers : $value->getKey();
+    }
+
+    private function setPropertyValue(PropertyKeyEnum $key, mixed $value): void
+    {
+        if ($key->equals(PropertyKey::Headers)) {
+            if (!isset($this->properties[PropertyKey::Headers->value])) {
+                $this->properties[PropertyKey::Headers->value] = new Headers();
+            }
+            $this->properties[PropertyKey::Headers->value][] = $value;
+        } else {
+            $this->properties[$key->value] = $this->getProperty($key, $value);
+        }
+    }
+
+    /**
+     * @param array<int|string, mixed> $arguments
+     * @return int|string|array<string, string>|null
+     */
+    public function __call(string $name, array $arguments): int|string|array|null
+    {
+        if ($name !== 'headers') {
+            $name = $this->nameConverter->normalize($name);
+        } else {
+            $name = PropertyKey::Headers;
+        }
+
+        return $this[$name]?->getValue();
     }
 }

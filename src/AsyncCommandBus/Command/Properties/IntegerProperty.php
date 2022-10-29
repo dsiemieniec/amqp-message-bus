@@ -7,8 +7,6 @@ namespace Siemieniec\AsyncCommandBus\Command\Properties;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey;
 use Siemieniec\AsyncCommandBus\Exception\InvalidArrayAccessException;
-use JetBrains\PhpStorm\Internal\LanguageLevelTypeAware;
-use JetBrains\PhpStorm\Internal\TentativeType;
 
 class IntegerProperty implements CommandPropertyInterface
 {

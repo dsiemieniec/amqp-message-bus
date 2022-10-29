@@ -11,5 +11,6 @@ use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelopeInterface;
 interface CommandSerializerInterface
 {
     public function serialize(CommandInterface $command, CommandProperties $properties): MessageEnvelopeInterface;
+
     public function deserialize(MessageEnvelopeInterface $envelope): CommandInterface;
 }

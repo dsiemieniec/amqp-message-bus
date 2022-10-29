@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\DependencyInjection;
 
-use Siemieniec\AsyncCommandBus\Cli\DebugCommandsConfigCommand;
+use ReflectionMethod;
 use Siemieniec\AsyncCommandBus\Exception\HandlerRegistryException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistry;
 use App\Kernel;
@@ -13,6 +13,7 @@ use RuntimeException;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 class HandlerRegistryCompilerPass implements CompilerPassInterface
@@ -22,7 +23,7 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
         $handlerRegistryDefinition = $container->findDefinition(HandlerRegistry::class);
 
         $handlerIds = $container->findTaggedServiceIds(Kernel::APP_COMMAND_HANDLER_TAG);
-        foreach ($handlerIds as $handlerId => $tags) {
+        foreach (\array_keys($handlerIds) as $handlerId) {
             $handlerRegistryDefinition
                 ->addMethodCall('registerHandler', [
                     $this->getCommandClass($container, (string)$handlerId),
@@ -42,14 +43,7 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
                 continue;
             }
 
-            $handlerClass = $definition->getClass();
-            if ($handlerClass === null) {
-                throw new RuntimeException(
-                    \sprintf('Could not establish class of %s during compiler pass', $handlerId)
-                );
-            }
-
-            return $handlerClass;
+            return $this->establishHandlerClass($definition, $handlerId);
         }
     }
 
@@ -77,6 +71,12 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
                 )
             );
         }
+
+        return $this->establishCommandClass($method, $handlerClass);
+    }
+
+    private function establishCommandClass(ReflectionMethod $method, string $handlerClass): string
+    {
         $param = $method->getParameters()[0]->getType();
         if ($param === null) {
             throw new HandlerRegistryException(
@@ -96,5 +96,17 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
         }
 
         return $param->getName();
+    }
+
+    private function establishHandlerClass(Definition $definition, string $handlerId): string
+    {
+        $handlerClass = $definition->getClass();
+        if ($handlerClass === null) {
+            throw new RuntimeException(
+                \sprintf('Could not establish class of %s during compiler pass', $handlerId)
+            );
+        }
+
+        return $handlerClass;
     }
 }

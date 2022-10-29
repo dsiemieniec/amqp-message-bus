@@ -1,23 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siemieniec\AsyncCommandBus\Tests\Config;
 
 use Siemieniec\AsyncCommandBus\Config\ConfigFactory;
-use Siemieniec\AsyncCommandBus\Config\Queue;
 use Siemieniec\AsyncCommandBus\Exception\MissingConnectionException;
-use Siemieniec\AsyncCommandBus\Exception\MissingExchangeException;
 use Siemieniec\AsyncCommandBus\Exception\MissingQueueException;
 use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
 {
-    private function getConfigFactory(): ConfigFactory
-    {
-        return new ConfigFactory();
-    }
-
     public function testShouldCreateDefaultConfigWithMinimalParameters(): void
     {
         $data = [
@@ -721,5 +715,10 @@ class ConfigFactoryTest extends TestCase
             self::assertEquals(12, $consumer->getWaitTimeout(), 'wait timeout');
             self::assertEquals(1000, $consumer->getMessagesLimit(), 'messages limit');
         }
+    }
+
+    private function getConfigFactory(): ConfigFactory
+    {
+        return new ConfigFactory();
     }
 }

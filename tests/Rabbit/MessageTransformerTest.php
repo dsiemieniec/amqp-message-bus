@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Siemieniec\AsyncCommandBus\Tests\Rabbit;
 
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
@@ -12,11 +14,6 @@ use PHPUnit\Framework\TestCase;
 
 class MessageTransformerTest extends TestCase
 {
-    private function getTransformer(): MessageTransformer
-    {
-        return new MessageTransformer();
-    }
-
     public function testShouldTransformMessage(): void
     {
         $body = 'Test message body';
@@ -164,5 +161,10 @@ class MessageTransformerTest extends TestCase
 
         self::assertEquals($body, $message->getBody());
         self::assertEquals($commandClass, $properties['type']);
+    }
+
+    private function getTransformer(): MessageTransformer
+    {
+        return new MessageTransformer();
     }
 }

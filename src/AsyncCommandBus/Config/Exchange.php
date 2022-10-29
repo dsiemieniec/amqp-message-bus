@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Config;
 
-use Siemieniec\AsyncCommandBus\Config\QueueBinding;
 use Siemieniec\AsyncCommandBus\Config\Connection;
 
 class Exchange
