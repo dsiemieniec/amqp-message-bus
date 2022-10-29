@@ -22,11 +22,11 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
     {
         $handlerRegistryDefinition = $container->findDefinition(HandlerRegistry::class);
 
-        $handlerIds = $container->findTaggedServiceIds(Kernel::APP_COMMAND_HANDLER_TAG);
+        $handlerIds = $container->findTaggedServiceIds(Kernel::APP_MESSAGE_HANDLER_TAG);
         foreach (\array_keys($handlerIds) as $handlerId) {
             $handlerRegistryDefinition
                 ->addMethodCall('registerHandler', [
-                    $this->getCommandClass($container, (string)$handlerId),
+                    $this->getMessageClass($container, (string)$handlerId),
                     new Reference($handlerId)
                 ]);
         }
@@ -47,7 +47,7 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
         }
     }
 
-    private function getCommandClass(ContainerBuilder $container, string $handlerId): string
+    private function getMessageClass(ContainerBuilder $container, string $handlerId): string
     {
         $handlerClass = $this->getHandlerClass($container, $handlerId);
         $reflectionClass = $container->getReflectionClass($handlerClass);
@@ -72,10 +72,10 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
             );
         }
 
-        return $this->establishCommandClass($method, $handlerClass);
+        return $this->establishMessageClass($method, $handlerClass);
     }
 
-    private function establishCommandClass(ReflectionMethod $method, string $handlerClass): string
+    private function establishMessageClass(ReflectionMethod $method, string $handlerClass): string
     {
         $param = $method->getParameters()[0]->getType();
         if ($param === null) {

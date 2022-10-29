@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Siemieniec\AmqpMessageBus\Config;
 
 use Exception;
-use Siemieniec\AmqpMessageBus\Serializer\DefaultCommandSerializer;
+use Siemieniec\AmqpMessageBus\Serializer\DefaultMessageSerializer;
 use Siemieniec\AmqpMessageBus\Utils\Inputs;
 
 final class ConfigFactory
 {
-    private const DEFAULT_QUEUE_NAME = 'async_command_bus';
+    private const DEFAULT_QUEUE_NAME = 'amqp_message_bus';
 
     /** @var array<string, mixed> */
     private array $config = [];
     private ConnectionsMap $connections;
     private ExchangesMap $exchanges;
     private QueuesMap $queues;
-    private CommandConfigsMap $commands;
+    private MessageConfigsMap $messages;
 
     public function __construct()
     {
@@ -36,9 +36,9 @@ final class ConfigFactory
         $this->readConnections();
         $this->readQueues();
         $this->readExchanges();
-        $this->readCommandPublishers();
+        $this->readMessages();
 
-        return new Config($this->exchanges, $this->queues, $this->commands);
+        return new Config($this->exchanges, $this->queues, $this->messages);
     }
 
     private function initMaps(): void
@@ -46,7 +46,7 @@ final class ConfigFactory
         $this->connections = new ConnectionsMap();
         $this->exchanges = new ExchangesMap();
         $this->queues = new QueuesMap();
-        $this->commands = new CommandConfigsMap();
+        $this->messages = new MessageConfigsMap();
     }
 
     private function readConnections(): void
@@ -131,26 +131,26 @@ final class ConfigFactory
         }
     }
 
-    private function readCommandPublishers(): void
+    private function readMessages(): void
     {
-        foreach ($this->config['commands'] ?? [] as $class => $params) {
+        foreach ($this->config['messages'] ?? [] as $class => $params) {
             $publisherConfig = null;
             $publisherConfig = $params['publisher'] ?? [];
             if (\array_key_exists('queue', $publisherConfig)) {
-                $publisherConfig = new QueuePublishedCommandConfig($this->queues[$publisherConfig['queue']]);
+                $publisherConfig = new QueuePublishedMessageConfig($this->queues[$publisherConfig['queue']]);
             } elseif (\array_key_exists('exchange', $publisherConfig)) {
                 $exchangePublisherConfig = $publisherConfig['exchange'];
-                $publisherConfig = new ExchangePublishedCommandConfig(
+                $publisherConfig = new ExchangePublishedMessageConfig(
                     $this->exchanges[$exchangePublisherConfig['name']],
                     $exchangePublisherConfig['routing_key'] ?? ''
                 );
             }
 
-            $this->commands[$class] = new CommandConfig(
+            $this->messages[$class] = new MessageConfig(
                 $class,
-                $params['serializer'] ?? DefaultCommandSerializer::class,
-                $publisherConfig ?? new QueuePublishedCommandConfig($this->queues['default']),
-                Inputs::boolValue($params['requeue_on_failure'] ?? CommandConfig::DEFAULT_REQUEUE_ON_FAILURE)
+                $params['serializer'] ?? DefaultMessageSerializer::class,
+                $publisherConfig ?? new QueuePublishedMessageConfig($this->queues['default']),
+                Inputs::boolValue($params['requeue_on_failure'] ?? MessageConfig::DEFAULT_REQUEUE_ON_FAILURE)
             );
         }
     }

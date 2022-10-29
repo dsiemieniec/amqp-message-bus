@@ -8,5 +8,5 @@ use PhpAmqpLib\Message\AMQPMessage;
 
 interface ConsumerCallbackInterface
 {
-    public function onMessage(AMQPMessage $message, ConnectionInterface $connection): void;
+    public function onMessage(AMQPMessage $amqpMessage, ConnectionInterface $connection): void;
 }

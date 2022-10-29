@@ -4,7 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    async_command_bus:
+    amqp_message_bus:
         auto_declare: true
         connections:
             default:
@@ -51,7 +51,7 @@ parameters:
             queue_with_arguments:
                 arguments:
                     x-message-ttl: 200
-        commands:
+        messages:
             App\Command\AnotherSimpleCommand:
                 serializer: App\Serializer\SampleCommandSerializer
                 publisher:
@@ -82,13 +82,13 @@ services:
             - '../src/Playground/Entity/'
             - '../src/Playground/Kernel.php'
 
-    Siemieniec\AsyncCommandBus\:
-        resource: '../src/AsyncCommandBus/'
+    Siemieniec\AmqpMessageBus\:
+        resource: '../src/AmqpMessageBus/'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    Siemieniec\AsyncCommandBus\ConfigFactory: ~
+    Siemieniec\AmqpMessageBus\ConfigFactory: ~
 
-    Siemieniec\AsyncCommandBus\Config\Config:
+    Siemieniec\AmqpMessageBus\Config\Config:
         factory: ['@Siemieniec\AsyncCommandBus\Config\ConfigFactory', 'create']
-        arguments: ['%async_command_bus%']
+        arguments: ['%amqp_message_bus%']

@@ -14,32 +14,32 @@ final class HandlerRegistry implements HandlerRegistryInterface
      */
     private array $registry = [];
 
-    public function registerHandler(string $commandClass, HandlerInterface $handler): void
+    public function registerHandler(string $messageClass, HandlerInterface $handler): void
     {
-        if (isset($this->registry[$commandClass])) {
+        if (isset($this->registry[$messageClass])) {
             throw new HandlerDuplicateException(
                 \sprintf(
-                    'Command %s already has handler %s',
-                    $commandClass,
-                    \get_class($this->registry[$commandClass])
+                    'Message %s already has handler %s',
+                    $messageClass,
+                    \get_class($this->registry[$messageClass])
                 )
             );
         }
 
-        $this->registry[$commandClass] = $handler;
+        $this->registry[$messageClass] = $handler;
     }
 
-    public function getHandler(object $command): HandlerInterface
+    public function getHandler(object $message): HandlerInterface
     {
-        return $this->getHandlerByClass(\get_class($command));
+        return $this->getHandlerByClass(\get_class($message));
     }
 
-    public function getHandlerByClass(string $commandClass): HandlerInterface
+    public function getHandlerByClass(string $messageClass): HandlerInterface
     {
-        if (!isset($this->registry[$commandClass])) {
-            throw new HandlerMissingException(\sprintf('Handler not registered for command %s', $commandClass));
+        if (!isset($this->registry[$messageClass])) {
+            throw new HandlerMissingException(\sprintf('Handler not registered for message %s', $messageClass));
         }
 
-        return $this->registry[$commandClass];
+        return $this->registry[$messageClass];
     }
 }

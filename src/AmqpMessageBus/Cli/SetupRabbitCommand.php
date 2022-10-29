@@ -13,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
 #[AsCommand(
-    name: 'async-commands:setup-rabbit',
+    name: 'amqp-message-bus:setup-rabbit',
     description: 'Declares queues, exchanges and bindings',
 )]
 class SetupRabbitCommand extends Command

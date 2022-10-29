@@ -39,7 +39,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Siemieniec\\AsyncCommandBus\\Tests\\": "tests/"
+            "Siemieniec\\AmqpMessageBus\\Tests\\": "tests/"
         }
     },
     "replace": {

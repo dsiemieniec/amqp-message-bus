@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Rabbit;
 
-use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
 use Stringable;
 
 final class MessageEnvelope implements MessageEnvelopeInterface
 {
-    private CommandProperties $properties;
+    private MessageProperties $properties;
 
     public function __construct(
         private Stringable|string $body,
-        private string $commandClass,
-        ?CommandProperties $properties = null
+        private string $messageClass,
+        ?MessageProperties $properties = null
     ) {
-        $this->properties = $properties ?: new CommandProperties();
+        $this->properties = $properties ?: new MessageProperties();
     }
 
     public function getBody(): Stringable|string
@@ -24,13 +24,13 @@ final class MessageEnvelope implements MessageEnvelopeInterface
         return $this->body;
     }
 
-    public function getProperties(): CommandProperties
+    public function getProperties(): MessageProperties
     {
         return $this->properties;
     }
 
-    public function getCommandClass(): string
+    public function getMessageClass(): string
     {
-        return $this->commandClass;
+        return $this->messageClass;
     }
 }

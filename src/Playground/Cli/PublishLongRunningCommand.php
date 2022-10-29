@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cli;
 
-use Siemieniec\AmqpMessageBus\Command\CommandBusInterface;
+use Siemieniec\AmqpMessageBus\Message\MessageBusInterface;
 use App\Command\LongRunningCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class PublishLongRunningCommand extends Command
 {
     public function __construct(
-        private CommandBusInterface $commandBus
+        private MessageBusInterface $commandBus
     ) {
         parent::__construct();
     }

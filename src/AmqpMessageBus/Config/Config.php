@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Config;
 
-use Siemieniec\AmqpMessageBus\Serializer\DefaultCommandSerializer;
+use Siemieniec\AmqpMessageBus\Serializer\DefaultMessageSerializer;
 
 class Config
 {
     public function __construct(
         private ExchangesMap $exchanges,
         private QueuesMap $queues,
-        private CommandConfigsMap $commandConfigsMap
+        private MessageConfigsMap $messageConfigsMap
     ) {
     }
 
-    public function getCommandConfig(string $commandClass): CommandConfig
+    public function getMessageConfig(string $messageClass): MessageConfig
     {
-        if (!isset($this->commandConfigsMap[$commandClass])) {
-            $this->commandConfigsMap[$commandClass] = new CommandConfig(
-                $commandClass,
-                DefaultCommandSerializer::class,
-                new QueuePublishedCommandConfig($this->queues['default'])
+        if (!isset($this->messageConfigsMap[$messageClass])) {
+            $this->messageConfigsMap[$messageClass] = new MessageConfig(
+                $messageClass,
+                DefaultMessageSerializer::class,
+                new QueuePublishedMessageConfig($this->queues['default'])
             );
         }
 
-        return $this->commandConfigsMap[$commandClass];
+        return $this->messageConfigsMap[$messageClass];
     }
 
     public function getQueueConfig(string $name): Queue
