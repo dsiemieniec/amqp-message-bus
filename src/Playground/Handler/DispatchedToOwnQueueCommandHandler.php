@@ -10,15 +10,16 @@ use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
 
 final class DispatchedToOwnQueueCommandHandler implements HandlerInterface
 {
-    public function __construct(private SomeTestService $service)
-    {
+    public function __construct(
+        private SomeTestService $service
+    ) {
     }
 
     public function __invoke(DispatchedToOwnQueueCommand $command): void
     {
-        \print_r([
+        print_r([
             'id' => $command->getId(),
-            'text' => $command->getText(),
+            'text' => $command->getText()
         ]);
 
         $this->service->doSomething();

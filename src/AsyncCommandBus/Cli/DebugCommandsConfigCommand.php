@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Siemieniec\AsyncCommandBus\Cli;
 
+use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Config\Config;
+use Siemieniec\AsyncCommandBus\Exception\HandlerMissingException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -13,19 +13,14 @@ use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function sprintf;
-use function implode;
-
-use const PHP_EOL;
-
-use function get_class;
-
-use Siemieniec\AsyncCommandBus\Cli\HandlerMissingException;
-
-#[AsCommand(name: 'async-commands:debug')]
-final class DebugCommandsConfigCommand extends Command
+#[AsCommand(
+    name: 'async-commands:debug'
+)]
+class DebugCommandsConfigCommand extends Command
 {
-    /** @param array<string> $commands */
+    /**
+     * @param string[] $commands
+     */
     public function __construct(
         private Config $config,
         private HandlerRegistry $handlerRegistry,
@@ -38,20 +33,19 @@ final class DebugCommandsConfigCommand extends Command
     {
         $table = new Table($output);
         $table->setHeaders(['Command', 'Handler', 'Serializer', 'Publisher config']);
-
         foreach ($this->commands as $command) {
             $table->addRow(new TableSeparator());
             $publisherConfig = $this->config->getCommandConfig($command)->getPublisherConfig();
 
             $publisher = [
-                sprintf('Connection: %s', $publisherConfig->getConnection()->getName()),
+                \sprintf('Connection: %s', $publisherConfig->getConnection()->getName())
             ];
 
             if ($publisherConfig->getPublisherTarget()->getExchange() === '') {
-                $publisher[] = sprintf('Queue: %s', $publisherConfig->getPublisherTarget()->getRoutingKey());
+                $publisher[] = \sprintf('Queue: %s', $publisherConfig->getPublisherTarget()->getRoutingKey());
             } else {
-                $publisher[] = sprintf('Exchange: %s', $publisherConfig->getPublisherTarget()->getExchange());
-                $publisher[] = sprintf(
+                $publisher[] = \sprintf('Exchange: %s', $publisherConfig->getPublisherTarget()->getExchange());
+                $publisher[] = \sprintf(
                     'Routing key: %s',
                     $publisherConfig->getPublisherTarget()->getRoutingKey()
                 );
@@ -61,7 +55,7 @@ final class DebugCommandsConfigCommand extends Command
                 $command,
                 $this->getHandlerClass($command),
                 $this->config->getCommandConfig($command)->getSerializerClass(),
-                implode(PHP_EOL, $publisher),
+                \implode(PHP_EOL, $publisher)
             ]);
         }
 
@@ -73,7 +67,7 @@ final class DebugCommandsConfigCommand extends Command
     private function getHandlerClass(string $commandClass): string
     {
         try {
-            return get_class($this->handlerRegistry->getHandlerByClass($commandClass));
+            return \get_class($this->handlerRegistry->getHandlerByClass($commandClass));
         } catch (HandlerMissingException) {
             return 'Missing handler';
         }

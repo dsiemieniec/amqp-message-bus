@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Command;
 
+use Siemieniec\AsyncCommandBus\Command\CommandBusInterface;
+use Siemieniec\AsyncCommandBus\Command\CommandInterface;
 use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
+use Siemieniec\AsyncCommandBus\Exception\CommandBusException;
 use Siemieniec\AsyncCommandBus\Handler\HandlerRegistryInterface;
 use Siemieniec\AsyncCommandBus\Rabbit\CommandPublisherInterface;
-
-use function sprintf;
-use function is_callable;
-
-use Siemieniec\AsyncCommandBus\Command\CommandBusException;
-
-use function get_class;
+use App\Utils\Delay;
+use Throwable;
 
 final class CommandBus implements CommandBusInterface
 {
@@ -26,16 +24,15 @@ final class CommandBus implements CommandBusInterface
     public function execute(CommandInterface $command): void
     {
         $handler = $this->handlerRegistry->getHandler($command);
-
-        if (!is_callable($handler)) {
-            throw new CommandBusException(sprintf('%s is not callable', get_class($handler)), $command);
+        if (!\is_callable($handler)) {
+            throw new CommandBusException(\sprintf('%s is not callable', \get_class($handler)), $command);
         }
 
         try {
             $handler($command);
         } catch (Throwable $throwable) {
             throw new CommandBusException(
-                sprintf('%s failed to process command', $handler::class),
+                \sprintf('%s failed to process command', \get_class($handler)),
                 $command,
                 $throwable
             );
@@ -47,11 +44,7 @@ final class CommandBus implements CommandBusInterface
         try {
             $this->commandPublisher->publish($command, $properties);
         } catch (Throwable $throwable) {
-            throw new CommandBusException(
-                'Failed to publish command',
-                $command,
-                $throwable
-            );
+            throw new CommandBusException('Failed to publish command', $command, $throwable);
         }
     }
 }

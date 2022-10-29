@@ -1,24 +1,26 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Handler;
 
 use Siemieniec\AsyncCommandBus\Command\CommandInterface;
-use Siemieniec\AsyncCommandBus\Handler\HandlerDuplicateException;
-use Siemieniec\AsyncCommandBus\Handler\HandlerMissingException;
-use function get_class;
-use function sprintf;
+use Siemieniec\AsyncCommandBus\Exception\HandlerDuplicateException;
+use Siemieniec\AsyncCommandBus\Exception\HandlerMissingException;
+use Siemieniec\AsyncCommandBus\Handler\HandlerRegistryInterface;
+use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
 
 final class HandlerRegistry implements HandlerRegistryInterface
 {
-    /** @var array<string, \Siemieniec\AsyncCommandBus\Handler\HandlerInterface> */
+    /**
+     * @var array<string, HandlerInterface>
+     */
     private array $registry = [];
 
     public function registerHandler(string $commandClass, HandlerInterface $handler): void
     {
         if (isset($this->registry[$commandClass])) {
-            throw new \Siemieniec\AsyncCommandBus\Handler\HandlerDuplicateException(
+            throw new HandlerDuplicateException(
                 \sprintf(
                     'Command %s already has handler %s',
                     $commandClass,
@@ -32,15 +34,13 @@ final class HandlerRegistry implements HandlerRegistryInterface
 
     public function getHandler(CommandInterface $command): HandlerInterface
     {
-        return $this->getHandlerByClass($command::class);
+        return $this->getHandlerByClass(\get_class($command));
     }
 
     public function getHandlerByClass(string $commandClass): HandlerInterface
     {
         if (!isset($this->registry[$commandClass])) {
-            throw new \Siemieniec\AsyncCommandBus\Handler\HandlerMissingException(
-                \sprintf('Handler not registered for command %s', $commandClass),
-            );
+            throw new HandlerMissingException(\sprintf('Handler not registered for command %s', $commandClass));
         }
 
         return $this->registry[$commandClass];

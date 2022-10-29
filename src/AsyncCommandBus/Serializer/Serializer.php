@@ -11,15 +11,17 @@ use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelopeInterface;
 
 final class Serializer
 {
-    public function __construct(private CommandSerializerRegistry $registry, private Config $config)
-    {
+    public function __construct(
+        private CommandSerializerRegistry $registry,
+        private Config $config
+    ) {
     }
 
     public function serialize(
         CommandInterface $command,
         ?CommandProperties $properties = null
     ): MessageEnvelopeInterface {
-        return $this->getSerializer($command::class)
+        return $this->getSerializer(\get_class($command))
             ->serialize($command, $properties ?: new CommandProperties());
     }
 

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Command\Properties;
 
-use Siemieniec\AsyncCommandBus\Command\Properties\InvalidArgumentException;
+use Siemieniec\AsyncCommandBus\Command\Properties\PropertyKey;
+use Siemieniec\AsyncCommandBus\Command\Properties\CommandPropertyInterface;
+use ArrayAccess;
+use InvalidArgumentException;
+use Siemieniec\AsyncCommandBus\Command\Properties\BasicHeader;
+use Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface;
 
-use function get_debug_type;
-use function is_string;
-use function sprintf;
-
-final class Headers implements CommandPropertyInterface
+class Headers implements CommandPropertyInterface
 {
-    /** @var array<string, \Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface> */
+    /**
+     * @var array<string, HeaderInterface>
+     */
     private array $headers = [];
 
     public function __construct(HeaderInterface ...$headers)
@@ -27,11 +30,12 @@ final class Headers implements CommandPropertyInterface
         return PropertyKey::Headers;
     }
 
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     */
     public function getValue(): array
     {
         $headers = [];
-
         foreach ($this->headers as $header) {
             $headers[$header->getName()] = $header->getValue();
         }
@@ -39,7 +43,9 @@ final class Headers implements CommandPropertyInterface
         return $headers;
     }
 
-    /** @param string $offset */
+    /**
+     * @param string $offset
+     */
     public function offsetExists(mixed $offset): bool
     {
         $this->assertOffsetType($offset);
@@ -47,7 +53,9 @@ final class Headers implements CommandPropertyInterface
         return \array_key_exists($offset, $this->headers);
     }
 
-    /** @param string $offset */
+    /**
+     * @param string $offset
+     */
     public function offsetGet(mixed $offset): ?HeaderInterface
     {
         $this->assertOffsetType($offset);
@@ -57,13 +65,14 @@ final class Headers implements CommandPropertyInterface
 
     /**
      * @param string|null $offset
-     * @param string|\Siemieniec\AsyncCommandBus\Command\Properties\HeaderInterface $value
+     * @param string|HeaderInterface $value
+     * @return void
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
         if ($offset === null) {
             if (!($value instanceof HeaderInterface)) {
-                throw new \Siemieniec\AsyncCommandBus\Command\Properties\InvalidArgumentException('Invalid header provided');
+                throw new InvalidArgumentException('Invalid header provided');
             }
 
             $offset = $value->getName();
@@ -72,12 +81,12 @@ final class Headers implements CommandPropertyInterface
         $this->assertOffsetType($offset);
         $this->assertValueType($value);
 
-        $this->headers[$offset] = $value instanceof HeaderInterface
-            ? $value
-            : new BasicHeader($offset, $value);
+        $this->headers[$offset] = $value instanceof HeaderInterface ? $value : new BasicHeader($offset, $value);
     }
 
-    /** @param string $offset */
+    /**
+     * @param string $offset
+     */
     public function offsetUnset(mixed $offset): void
     {
         $this->assertOffsetType($offset);
@@ -86,7 +95,7 @@ final class Headers implements CommandPropertyInterface
 
     private function assertOffsetType(mixed $offset): void
     {
-        if (!\is_string($offset)) {
+        if (!is_string($offset)) {
             throw new InvalidArgumentException(
                 \sprintf(
                     'Invalid offset type. Expected string but %s given',
@@ -100,10 +109,10 @@ final class Headers implements CommandPropertyInterface
     {
         if (!is_string($value) && !($value instanceof HeaderInterface)) {
             throw new InvalidArgumentException(
-                sprintf(
+                \sprintf(
                     'Invalid header value type. Expected string or %s but %s given',
                     HeaderInterface::class,
-                    get_debug_type($value)
+                    \get_debug_type($value)
                 )
             );
         }
