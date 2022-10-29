@@ -6,7 +6,7 @@ namespace App\Handler;
 
 use App\Command\DispatchedToOwnQueueCommand;
 use App\Service\SomeTestService;
-use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
 
 final class DispatchedToOwnQueueCommandHandler implements HandlerInterface
 {

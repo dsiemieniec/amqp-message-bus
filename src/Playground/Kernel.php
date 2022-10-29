@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App;
 
-use Siemieniec\AsyncCommandBus\DependencyInjection\CommandSerializerRegistryCompilerPass;
-use Siemieniec\AsyncCommandBus\DependencyInjection\HandlerRegistryCompilerPass;
-use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
-use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
+use Siemieniec\AmqpMessageBus\DependencyInjection\CommandSerializerRegistryCompilerPass;
+use Siemieniec\AmqpMessageBus\DependencyInjection\HandlerRegistryCompilerPass;
+use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Serializer\CommandSerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;

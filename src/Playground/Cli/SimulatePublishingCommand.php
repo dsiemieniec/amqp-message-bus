@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Cli;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AsyncCommandBus\Command\CommandBusInterface;
+use Siemieniec\AmqpMessageBus\Command\CommandBusInterface;
 use App\Command\DispatchedToOwnQueueCommand;
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
 use App\Utils\Delay;
 use DateTimeImmutable;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
 
 final class AnotherSimpleCommandHandler implements HandlerInterface
 {

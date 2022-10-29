@@ -34,7 +34,7 @@
     "autoload": {
         "psr-4": {
             "App\\": "src/Playground/",
-            "Siemieniec\\AsyncCommandBus\\": "src/AsyncCommandBus/"
+            "Siemieniec\\AmqpMessageBus\\": "src/AmqpMessageBus/"
         }
     },
     "autoload-dev": {

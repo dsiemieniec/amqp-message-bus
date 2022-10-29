@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Tests\Config;
 
-use Siemieniec\AsyncCommandBus\Config\ConfigFactory;
-use Siemieniec\AsyncCommandBus\Exception\MissingConnectionException;
-use Siemieniec\AsyncCommandBus\Exception\MissingQueueException;
-use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
+use Siemieniec\AmqpMessageBus\Config\ConfigFactory;
+use Siemieniec\AmqpMessageBus\Exception\MissingConnectionException;
+use Siemieniec\AmqpMessageBus\Exception\MissingQueueException;
+use Siemieniec\AmqpMessageBus\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase

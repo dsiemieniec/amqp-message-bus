@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cli;
 
-use Siemieniec\AsyncCommandBus\Command\CommandBusInterface;
+use Siemieniec\AmqpMessageBus\Command\CommandBusInterface;
 use App\Command\LongRunningCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;

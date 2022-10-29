@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Tests\Rabbit;
 
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
-use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
-use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelope;
-use Siemieniec\AsyncCommandBus\Rabbit\MessageTransformer;
+use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Command\Properties\DeliveryMode;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelope;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformer;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;

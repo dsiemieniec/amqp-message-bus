@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Tests\Serializer;
 
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
 use App\Command\SimpleCommand;
-use Siemieniec\AsyncCommandBus\Serializer\DefaultCommandSerializer;
+use Siemieniec\AmqpMessageBus\Serializer\DefaultCommandSerializer;
 use PHPUnit\Framework\TestCase;
 
 class CommandSerializerTest extends TestCase

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Siemieniec\AsyncCommandBus\Tests\Command\Properties;
 
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
-use Siemieniec\AsyncCommandBus\Command\Properties\DeliveryMode;
+use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Command\Properties\DeliveryMode;
 use PHPUnit\Framework\TestCase;
 
 class CommandPropertiesTest extends TestCase

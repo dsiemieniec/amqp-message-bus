@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\Command\LongRunningCommand;
-use Siemieniec\AsyncCommandBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
 
 class LongRunningHandler implements HandlerInterface
 {

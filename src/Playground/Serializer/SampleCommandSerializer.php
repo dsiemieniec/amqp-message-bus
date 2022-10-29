@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Serializer;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AsyncCommandBus\Command\Properties\CommandProperties;
-use Siemieniec\AsyncCommandBus\Exception\DeserializationException;
-use Siemieniec\AsyncCommandBus\Exception\SerializationException;
-use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelope;
-use Siemieniec\AsyncCommandBus\Rabbit\MessageEnvelopeInterface;
+use Siemieniec\AmqpMessageBus\Command\Properties\CommandProperties;
+use Siemieniec\AmqpMessageBus\Exception\DeserializationException;
+use Siemieniec\AmqpMessageBus\Exception\SerializationException;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelope;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelopeInterface;
 use DateTimeImmutable;
-use Siemieniec\AsyncCommandBus\Serializer\CommandSerializerInterface;
+use Siemieniec\AmqpMessageBus\Serializer\CommandSerializerInterface;
 
 class SampleCommandSerializer implements CommandSerializerInterface
 {
