@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Siemieniec\AmqpMessageBus\Rabbit;
+namespace Siemieniec\AmqpMessageBus\Message;
 
-use Siemieniec\AmqpMessageBus\Message\MessageBusInterface;
 use Siemieniec\AmqpMessageBus\Config\Config;
 use Siemieniec\AmqpMessageBus\Exception\MessageBusException;
+use Siemieniec\AmqpMessageBus\Message\MessageHandlerInvokerInterface;
+use Siemieniec\AmqpMessageBus\Rabbit\ConnectionInterface;
+use Siemieniec\AmqpMessageBus\Rabbit\ConsumerCallbackInterface;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformerInterface;
 use Siemieniec\AmqpMessageBus\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
@@ -15,7 +18,7 @@ final class MessageConsumerCallback implements ConsumerCallbackInterface
 {
     public function __construct(
         private Serializer $serializer,
-        private MessageBusInterface $messageBus,
+        private MessageHandlerInvokerInterface $handlerInvoker,
         private MessageTransformerInterface $transformer,
         private LoggerInterface $logger,
         private Config $config
@@ -29,15 +32,17 @@ final class MessageConsumerCallback implements ConsumerCallbackInterface
                 $this->transformer->transformMessage($amqpMessage)
             );
 
-            $this->messageBus->execute($message);
+            $this->handlerInvoker->handle($message);
 
             $connection->ack($amqpMessage);
         } catch (MessageBusException $exception) {
             $this->logger->error($exception->getMessage());
-            $connection->nack(
-                $amqpMessage,
-                $this->config->getMessageConfig(\get_class($message))->requeueOnFailure()
-            );
+            if (isset($message)) {
+                $connection->nack(
+                    $amqpMessage,
+                    $this->config->getMessageConfig(\get_class($message))->requeueOnFailure()
+                );
+            }
         }
     }
 }

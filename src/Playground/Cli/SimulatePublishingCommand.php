@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Cli;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AmqpMessageBus\Message\MessageBusInterface;
 use App\Command\DispatchedToOwnQueueCommand;
+use Siemieniec\AmqpMessageBus\Message\MessagePublisherInterface;
 use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
 use App\Command\SimpleCommand;
 use App\Utils\Delay;
@@ -25,7 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class SimulatePublishingCommand extends Command
 {
     public function __construct(
-        private MessageBusInterface $commandBus
+        private MessagePublisherInterface $messagePublisher
     ) {
         parent::__construct();
     }
@@ -65,7 +65,7 @@ class SimulatePublishingCommand extends Command
             $properties = MessageProperties::builder()
                 ->addHeader('x-delay', (string) Delay::seconds(\random_int(1, 15)))
                 ->build();
-            $this->commandBus->executeAsync($this->getRandomCommand(), $properties);
+            $this->messagePublisher->publish($this->getRandomCommand(), $properties);
 
             $progressBar->advance();
         }

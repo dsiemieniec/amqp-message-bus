@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siemieniec\AmqpMessageBus\Rabbit;
+namespace Siemieniec\AmqpMessageBus\Message;
 
 use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
 

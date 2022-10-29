@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Cli;
 
-use Siemieniec\AmqpMessageBus\Message\MessageBusInterface;
 use App\Command\LongRunningCommand;
+use Siemieniec\AmqpMessageBus\Message\MessagePublisherInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class PublishLongRunningCommand extends Command
 {
     public function __construct(
-        private MessageBusInterface $commandBus
+        private MessagePublisherInterface $messagePublisher
     ) {
         parent::__construct();
     }
@@ -43,7 +43,7 @@ class PublishLongRunningCommand extends Command
         $progressBar->start();
 
         for ($i = 0; $i < $numberOfCommands; $i++) {
-            $this->commandBus->executeAsync(new LongRunningCommand($seconds));
+            $this->messagePublisher->publish(new LongRunningCommand($seconds));
 
             $progressBar->advance();
         }

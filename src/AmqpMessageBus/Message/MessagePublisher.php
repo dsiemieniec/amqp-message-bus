@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siemieniec\AmqpMessageBus\Rabbit;
+namespace Siemieniec\AmqpMessageBus\Message;
 
 use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
 use Siemieniec\AmqpMessageBus\Config\MessageConfig;
@@ -10,10 +10,13 @@ use Siemieniec\AmqpMessageBus\Config\Config;
 use Siemieniec\AmqpMessageBus\Config\Connection as ConnectionConfig;
 use Siemieniec\AmqpMessageBus\Config\ExchangePublishedMessageConfig;
 use Siemieniec\AmqpMessageBus\Config\QueuePublishedMessageConfig;
+use Siemieniec\AmqpMessageBus\Rabbit\ConnectionInterface;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformerInterface;
+use Siemieniec\AmqpMessageBus\Rabbit\RabbitConnection;
 use Siemieniec\AmqpMessageBus\Serializer\Serializer;
 use Psr\Log\LoggerInterface;
 
-class MessagePublisher implements MessagePublisherInterface
+final class MessagePublisher implements MessagePublisherInterface
 {
     /**
      * @var array<string, ConnectionInterface>
