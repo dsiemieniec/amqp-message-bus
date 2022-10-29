@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Siemieniec\AmqpMessageBus\Message;
+namespace Siemieniec\AmqpMessageBus\Handler;
 
 interface MessageHandlerInvokerInterface
 {

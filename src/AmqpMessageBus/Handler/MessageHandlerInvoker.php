@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Siemieniec\AmqpMessageBus\Message;
+namespace Siemieniec\AmqpMessageBus\Handler;
 
 use Siemieniec\AmqpMessageBus\Exception\MessageBusException;
 use Siemieniec\AmqpMessageBus\Handler\HandlerRegistryInterface;
+use Siemieniec\AmqpMessageBus\Handler\MessageHandlerInvokerInterface;
 use Throwable;
 
 final class MessageHandlerInvoker implements MessageHandlerInvokerInterface

@@ -6,7 +6,7 @@ namespace Siemieniec\AmqpMessageBus\Message;
 
 use Siemieniec\AmqpMessageBus\Config\Config;
 use Siemieniec\AmqpMessageBus\Exception\MessageBusException;
-use Siemieniec\AmqpMessageBus\Message\MessageHandlerInvokerInterface;
+use Siemieniec\AmqpMessageBus\Handler\MessageHandlerInvokerInterface;
 use Siemieniec\AmqpMessageBus\Rabbit\ConnectionInterface;
 use Siemieniec\AmqpMessageBus\Rabbit\ConsumerCallbackInterface;
 use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformerInterface;
