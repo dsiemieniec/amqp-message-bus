@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Siemieniec\AmqpMessageBus\Message;
 
 use Siemieniec\AmqpMessageBus\Config\Config;
-use Siemieniec\AmqpMessageBus\Exception\MessageBusException;
+use Siemieniec\AmqpMessageBus\Exception\HandlersFailedException;
 use Siemieniec\AmqpMessageBus\Handler\MessageHandlerInvokerInterface;
 use Siemieniec\AmqpMessageBus\Rabbit\ConnectionInterface;
 use Siemieniec\AmqpMessageBus\Rabbit\ConsumerCallbackInterface;
@@ -13,6 +13,7 @@ use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformerInterface;
 use Siemieniec\AmqpMessageBus\Serializer\Serializer;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 final class MessageConsumerCallback implements ConsumerCallbackInterface
 {
@@ -35,8 +36,17 @@ final class MessageConsumerCallback implements ConsumerCallbackInterface
             $this->handlerInvoker->handle($message);
 
             $connection->ack($amqpMessage);
-        } catch (MessageBusException $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (HandlersFailedException $exception) {
+            $this->logger->error($exception->getMessage(), [
+                'trace' => $exception->getMessage(),
+                'nestedExceptions' => \array_map(
+                    fn(Throwable $throwable): array => [
+                        'message' => $throwable->getMessage(),
+                        'trace' => $throwable->getTraceAsString()
+                    ],
+                    $exception->getNestedExceptions()
+                )
+            ]);
             if (isset($message)) {
                 $connection->nack(
                     $amqpMessage,

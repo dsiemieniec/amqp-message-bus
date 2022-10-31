@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Handler;
 
-use Siemieniec\AmqpMessageBus\Exception\MessageBusException;
-use Siemieniec\AmqpMessageBus\Handler\HandlerRegistryInterface;
-use Siemieniec\AmqpMessageBus\Handler\MessageHandlerInvokerInterface;
+use Siemieniec\AmqpMessageBus\Exception\HandlersFailedException;
 use Throwable;
 
 final class MessageHandlerInvoker implements MessageHandlerInvokerInterface
@@ -18,25 +16,22 @@ final class MessageHandlerInvoker implements MessageHandlerInvokerInterface
 
     public function handle(object $message): void
     {
-        $handler = $this->getHandler($message);
+        $handlers = $this->handlerRegistry->getHandlers($message);
 
-        try {
-            $handler($message);
-        } catch (Throwable $throwable) {
-            throw new MessageBusException(
-                \sprintf('%s failed to process message', \get_debug_type($handler)),
-                $throwable
+        $exceptions = [];
+        foreach ($handlers as $handler) {
+            try {
+                $handler($message);
+            } catch (Throwable $throwable) {
+                $exceptions[] = $throwable;
+            }
+        }
+
+        if (\count($exceptions) > 0) {
+            throw new HandlersFailedException(
+                \sprintf('Some handlers of %s failed', \get_class($message)),
+                $exceptions
             );
         }
-    }
-
-    private function getHandler(object $message): callable
-    {
-        $handler = $this->handlerRegistry->getHandler($message);
-        if (!\is_callable($handler)) {
-            throw new MessageBusException(\sprintf('%s is not callable', \get_debug_type($handler)));
-        }
-
-        return $handler;
     }
 }
