@@ -14,4 +14,13 @@ class Inputs
 
         return true === (bool)$value || $value === 'true' || 1 === (int)$value;
     }
+
+    public static function floatValue(mixed $value): float
+    {
+        if (\is_string($value)) {
+            $value = \str_replace(',', '.', $value);
+        }
+
+        return \floatval($value);
+    }
 }

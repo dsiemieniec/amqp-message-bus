@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Siemieniec\AmqpMessageBus\Tests\Config;
 
 use Siemieniec\AmqpMessageBus\Config\ConfigFactory;
+use Siemieniec\AmqpMessageBus\Config\Connection;
 use Siemieniec\AmqpMessageBus\Exception\MissingConnectionException;
 use Siemieniec\AmqpMessageBus\Exception\MissingQueueException;
 use Siemieniec\AmqpMessageBus\Serializer\DefaultMessageSerializer;
@@ -43,6 +44,14 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getUser());
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
+        self::assertEquals(Connection::DEFAULT_INSIST, $publisherConnectionConfig->isInsist());
+        self::assertEquals(Connection::DEFAULT_LOGIN_METHOD, $publisherConnectionConfig->getLoginMethod());
+        self::assertEquals(Connection::DEFAULT_LOCALE, $publisherConnectionConfig->getLocale());
+        self::assertEquals(Connection::DEFAULT_CONNECTION_TIMEOUT, $publisherConnectionConfig->getConnectionTimeout());
+        self::assertEquals(Connection::DEFAULT_READ_WRITE_TIMEOUT, $publisherConnectionConfig->getReadWriteTimeout());
+        self::assertEquals(Connection::DEFAULT_KEEP_ALIVE, $publisherConnectionConfig->isKeepAlive());
+        self::assertEquals(Connection::DEFAULT_HEARTBEAT, $publisherConnectionConfig->getHeartbeat());
+        self::assertEquals(Connection::DEFAULT_SSL_PROTOCOL, $publisherConnectionConfig->getSslProtocol());
 
         $defaultQueueConfig = $config->getQueueConfig('default');
         self::assertEquals('amqp_message_bus', $defaultQueueConfig->getName());
@@ -121,7 +130,15 @@ class ConfigFactoryTest extends TestCase
                     'port' => 5672,
                     'user' => 'guest',
                     'password' => 'guest',
-                    'vhost' => 'test_vhost'
+                    'vhost' => 'test_vhost',
+                    'insist' => true,
+                    'login_method' => 'PLAIN',
+                    'locale' => 'pl_PL',
+                    'connection_timeout' => 5.0,
+                    'read_write_timeout' => 11.1,
+                    'keep_alive' => true,
+                    'heartbeat' => 1234,
+                    'ssl_protocol' => 'test'
                 ]
             ],
             'queues' => [
@@ -157,6 +174,14 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('guest', $publisherConnectionConfig->getUser());
         self::assertEquals('guest', $publisherConnectionConfig->getPassword());
         self::assertEquals('test_vhost', $publisherConnectionConfig->getVHost());
+        self::assertEquals(true, $publisherConnectionConfig->isInsist());
+        self::assertEquals('PLAIN', $publisherConnectionConfig->getLoginMethod());
+        self::assertEquals('pl_PL', $publisherConnectionConfig->getLocale());
+        self::assertEquals(5.0, $publisherConnectionConfig->getConnectionTimeout());
+        self::assertEquals(11.1, $publisherConnectionConfig->getReadWriteTimeout());
+        self::assertEquals(true, $publisherConnectionConfig->isKeepAlive());
+        self::assertEquals(1234, $publisherConnectionConfig->getHeartbeat());
+        self::assertEquals('test', $publisherConnectionConfig->getSslProtocol());
     }
 
     public function testShouldDefineCommandPublishedToExchangeBoundToDefaultQueue(): void
@@ -625,7 +650,15 @@ class ConfigFactoryTest extends TestCase
                     'host' => 'localhost',
                     'port' => '5672',
                     'user' => 'guest',
-                    'password' => 'guest'
+                    'password' => 'guest',
+                    'insist' => 'true',
+                    'login_method' => 'PLAIN',
+                    'locale' => 'pl_PL',
+                    'connection_timeout' => '5,0',
+                    'read_write_timeout' => '11,1',
+                    'keep_alive' => 'true',
+                    'heartbeat' => '1234',
+                    'ssl_protocol' => 'test'
                 ]
             ]
         ];
@@ -633,6 +666,14 @@ class ConfigFactoryTest extends TestCase
         $config = $this->getConfigFactory()->create($data);
         $connection = $config->getMessageConfig('TestCommand')->getPublisherConfig()->getConnection();
         self::assertEquals(5672, $connection->getPort());
+        self::assertEquals(true, $connection->isInsist());
+        self::assertEquals('PLAIN', $connection->getLoginMethod());
+        self::assertEquals('pl_PL', $connection->getLocale());
+        self::assertEquals(5.0, $connection->getConnectionTimeout());
+        self::assertEquals(11.1, $connection->getReadWriteTimeout());
+        self::assertEquals(true, $connection->isKeepAlive());
+        self::assertEquals(1234, $connection->getHeartbeat());
+        self::assertEquals('test', $connection->getSslProtocol());
     }
 
     public function testShouldCastQueueConfigValues(): void

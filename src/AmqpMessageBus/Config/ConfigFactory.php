@@ -58,7 +58,19 @@ final class ConfigFactory
                 port: (int)$params['port'],
                 user: $params['user'],
                 password: $params['password'],
-                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST
+                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST,
+                insist: Inputs::boolValue($params['insist'] ?? Connection::DEFAULT_INSIST),
+                loginMethod: $params['login_method'] ?? Connection::DEFAULT_LOGIN_METHOD,
+                locale: $params['locale'] ?? Connection::DEFAULT_LOCALE,
+                connectionTimeout: Inputs::floatValue(
+                    $params['connection_timeout'] ?? Connection::DEFAULT_CONNECTION_TIMEOUT
+                ),
+                readWriteTimeout: Inputs::floatValue(
+                    $params['read_write_timeout'] ?? Connection::DEFAULT_READ_WRITE_TIMEOUT
+                ),
+                keepAlive: Inputs::boolValue($params['keep_alive'] ?? Connection::DEFAULT_KEEP_ALIVE),
+                heartbeat: (int)($params['heartbeat'] ?? Connection::DEFAULT_HEARTBEAT),
+                sslProtocol: $params['ssl_protocol'] ?? Connection::DEFAULT_SSL_PROTOCOL
             );
         }
     }

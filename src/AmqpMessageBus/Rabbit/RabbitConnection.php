@@ -24,15 +24,22 @@ class RabbitConnection implements ConnectionInterface
     private AMQPChannel $channel;
     private bool $consumerStopped = false;
 
-    public function __construct(
-        private Connection $connectionConfig
-    ) {
+    public function __construct(Connection $connectionConfig)
+    {
         $this->connection = new AMQPStreamConnection(
-            $this->connectionConfig->getHost(),
-            $this->connectionConfig->getPort(),
-            $this->connectionConfig->getUser(),
-            $this->connectionConfig->getPassword(),
-            $this->connectionConfig->getVHost()
+            host: $connectionConfig->getHost(),
+            port: $connectionConfig->getPort(),
+            user: $connectionConfig->getUser(),
+            password: $connectionConfig->getPassword(),
+            vhost: $connectionConfig->getVHost(),
+            insist: $connectionConfig->isInsist(),
+            login_method: $connectionConfig->getLoginMethod(),
+            locale: $connectionConfig->getLocale(),
+            connection_timeout: $connectionConfig->getConnectionTimeout(),
+            read_write_timeout: $connectionConfig->getReadWriteTimeout(),
+            keepalive: $connectionConfig->isKeepAlive(),
+            heartbeat: $connectionConfig->getHeartbeat(),
+            ssl_protocol: $connectionConfig->getSslProtocol()
         );
         $this->channel = $this->connection->channel();
     }
