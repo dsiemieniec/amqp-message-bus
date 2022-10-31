@@ -120,7 +120,7 @@ class RabbitConnection implements ConnectionInterface
             $finishTimeout = $finishAt - \time();
             if ($finishTimeout <= 1) {
                 return 1;
-            } elseif ($timeout > 0 && $finishTimeout < $timeout) {
+            } else {
                 return $finishTimeout;
             }
         }

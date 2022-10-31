@@ -12,12 +12,16 @@ parameters:
                 port: '%env(RABBIT_PORT)%'
                 user: '%env(RABBIT_USER)%'
                 password: '%env(RABBIT_PASSWORD)%'
+                keep_alive: true
+                heartbeat: 60
             second:
                 host: '%env(RABBIT_CONNECTION)%'
                 port: '%env(RABBIT_PORT)%'
                 user: '%env(RABBIT_USER)%'
                 password: '%env(RABBIT_PASSWORD)%'
                 vhost: 'test_vhost'
+                keep_alive: true
+                heartbeat: 60
         exchanges:
             test_exchange_name:
                 connection: second
@@ -33,11 +37,14 @@ parameters:
                 queue_bindings:
                     - {queue: first_queue_name, routing_key: another_simple_command}
         queues:
+            default:
+                consumer:
+                    time_limit: 60
             first_queue_name:
                 connection: default
                 name: first_queue
                 consumer:
-                    messages_limit: 1000
+                    time_limit: 30
             second_queue_name:
                 connection: second
                 name: second_queue
@@ -45,6 +52,8 @@ parameters:
                 durable: false
                 exclusive: false
                 auto_delete: false
+                consumer:
+                    time_limit: 120
             long_running:
                 connection: default
                 name: long_running

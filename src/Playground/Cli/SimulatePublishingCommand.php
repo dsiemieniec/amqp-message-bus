@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cli;
 
+use App\Command\AbstractLongRunningCommand;
 use App\Command\AnotherSimpleCommand;
 use App\Command\DispatchedToOwnQueueCommand;
 use Siemieniec\AmqpMessageBus\Message\MessagePublisherInterface;
@@ -30,7 +31,7 @@ class SimulatePublishingCommand extends Command
         parent::__construct();
     }
 
-    public function getRandomCommand(): object
+    public function getRandomCommand(): AbstractLongRunningCommand
     {
         $i = \random_int(0, 2);
         if ($i === 0) {
@@ -65,7 +66,10 @@ class SimulatePublishingCommand extends Command
             $properties = MessageProperties::builder()
                 ->addHeader('x-delay', (string) Delay::seconds(\random_int(1, 15)))
                 ->build();
-            $this->messagePublisher->publish($this->getRandomCommand(), $properties);
+            $this->messagePublisher->publish(
+                $this->getRandomCommand()->setExecutionTime(\random_int(0, 5)),
+                $properties
+            );
 
             $progressBar->advance();
         }

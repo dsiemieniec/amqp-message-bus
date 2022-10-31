@@ -25,7 +25,6 @@ class ConsumeMessagesCommand extends Command
 {
     private MessageConsumer $consumer;
     private string $name;
-    private SymfonyStyle $io;
 
     public function __construct(
         private MessageConsumerFactory $consumerFactory,
@@ -46,18 +45,16 @@ class ConsumeMessagesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
         try {
             $this->name = $input->getArgument('name');
-            $this->io->info(\sprintf('Starting %s consumer...', $this->name));
+            $io->info(\sprintf('Starting %s consumer...', $this->name));
 
             $this->consumer = $this->consumerFactory->create($this->name);
             $this->consumer->consume();
         } catch (MessageLimitException | TimeLimitException | AMQPTimeoutException $exception) {
-            $this->io->warning($exception->getMessage());
             $this->logger->warning($exception->getMessage());
         } catch (Throwable $exception) {
-            $this->io->error($exception->getMessage());
             $this->logger->error($exception->getMessage());
 
             return Command::FAILURE;
@@ -74,7 +71,6 @@ class ConsumeMessagesCommand extends Command
             $signals[$signalNumber],
             $this->name
         );
-        $this->io->warning($message);
         $this->logger->warning($message);
         $this->consumer->stop();
     }

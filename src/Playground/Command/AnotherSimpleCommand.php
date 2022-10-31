@@ -6,7 +6,7 @@ namespace App\Command;
 
 use DateTimeInterface;
 
-class AnotherSimpleCommand
+class AnotherSimpleCommand extends AbstractLongRunningCommand
 {
     public function __construct(
         private string $firstText,

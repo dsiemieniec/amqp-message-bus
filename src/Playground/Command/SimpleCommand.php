@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-class SimpleCommand
+class SimpleCommand extends AbstractLongRunningCommand
 {
     public function __construct(
         private int $id,

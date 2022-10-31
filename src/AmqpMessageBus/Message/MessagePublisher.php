@@ -38,10 +38,11 @@ final class MessagePublisher implements MessagePublisherInterface
 
     public function publish(object $message, ?MessageProperties $messageProperties = null): void
     {
+        $messageConfig = $this->config->getMessageConfig(\get_class($message));
         $message = $this->transformer->transformEnvelope(
             $this->serializer->serialize($message, $messageProperties),
         );
-        $messageConfig = $this->config->getMessageConfig(\get_class($message));
+
         $this->declareTargets($messageConfig);
 
         $publisherConfig = $messageConfig->getPublisherConfig();
