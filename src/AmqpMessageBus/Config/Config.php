@@ -17,15 +17,15 @@ class Config
 
     public function getMessageConfig(string $messageClass): MessageConfig
     {
-        if (!isset($this->messageConfigsMap[$messageClass])) {
-            $this->messageConfigsMap[$messageClass] = new MessageConfig(
-                $messageClass,
-                DefaultMessageSerializer::class,
-                new QueuePublishedMessageConfig($this->queues['default'])
-            );
+        if (isset($this->messageConfigsMap[$messageClass])) {
+            return $this->messageConfigsMap[$messageClass];
         }
 
-        return $this->messageConfigsMap[$messageClass];
+        return new MessageConfig(
+            $messageClass,
+            DefaultMessageSerializer::class,
+            new QueuePublishedMessageConfig($this->queues['default'])
+        );
     }
 
     public function getQueueConfig(string $name): Queue
