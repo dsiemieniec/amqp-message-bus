@@ -7,7 +7,7 @@ namespace App\Handler;
 use App\Command\AnotherSimpleCommand;
 use Siemieniec\AmqpMessageBus\Attributes\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(AnotherSimpleCommand::class)]
 final class AnotherSimpleCommandHandler
 {
     public function __invoke(AnotherSimpleCommand $command): void

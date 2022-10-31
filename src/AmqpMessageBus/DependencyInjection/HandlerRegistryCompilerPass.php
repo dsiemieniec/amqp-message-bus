@@ -65,6 +65,16 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
     {
         $handlerClass = $this->getHandlerClass($container, $handlerId);
         $reflectionClass = $container->getReflectionClass($handlerClass);
+        foreach ($reflectionClass?->getAttributes() ?? [] as $attribute) {
+            if ($attribute->getName() === AsMessageHandler::class) {
+                /** @var AsMessageHandler $asMessageHandler */
+                $asMessageHandler = $attribute->newInstance();
+                if ($asMessageHandler->getHandles() !== null) {
+                    return $asMessageHandler->getHandles();
+                }
+            }
+        }
+
         if ($reflectionClass === null) {
             throw new RuntimeException(
                 \sprintf('Could not create ReflectionClass of %s during  compiler pass', $handlerClass)
