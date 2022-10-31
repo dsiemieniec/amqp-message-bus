@@ -16,7 +16,6 @@
     <config name="installed_paths" value="../../slevomat/coding-standard"/>
 
     <rule ref="SlevomatCodingStandard.Commenting.DocCommentSpacing" />
-    <rule ref="SlevomatCodingStandard.Complexity.Cognitive" />
     <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
         <properties>
             <property name="searchAnnotations" value="true" />

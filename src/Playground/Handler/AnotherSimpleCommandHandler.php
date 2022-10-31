@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\Command\AnotherSimpleCommand;
-use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Attributes\AsMessageHandler;
 
-final class AnotherSimpleCommandHandler implements HandlerInterface
+#[AsMessageHandler]
+final class AnotherSimpleCommandHandler
 {
     public function __invoke(AnotherSimpleCommand $command): void
     {

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Siemieniec\AmqpMessageBus\DependencyInjection;
 
 use ReflectionMethod;
+use Siemieniec\AmqpMessageBus\Attributes\AsMessageHandler;
 use Siemieniec\AmqpMessageBus\Exception\HandlerRegistryException;
 use Siemieniec\AmqpMessageBus\Handler\HandlerRegistry;
-use App\Kernel;
 use ReflectionNamedType;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -22,13 +22,27 @@ class HandlerRegistryCompilerPass implements CompilerPassInterface
     {
         $handlerRegistryDefinition = $container->findDefinition(HandlerRegistry::class);
 
-        $handlerIds = $container->findTaggedServiceIds(Kernel::APP_MESSAGE_HANDLER_TAG);
-        foreach (\array_keys($handlerIds) as $handlerId) {
+        foreach ($this->findHandlers($container) as $handlerId) {
             $handlerRegistryDefinition
                 ->addMethodCall('registerHandler', [
                     $this->getMessageClass($container, (string)$handlerId),
                     new Reference($handlerId)
                 ]);
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    private function findHandlers(ContainerBuilder $container): iterable
+    {
+        foreach ($container->getDefinitions() as $handlerId => $definition) {
+            $reflectionClass = $container->getReflectionClass($definition->getClass());
+            foreach ($reflectionClass?->getAttributes() ?? [] as $attribute) {
+                if ($attribute->getName() === AsMessageHandler::class) {
+                    yield $handlerId;
+                }
+            }
         }
     }
 

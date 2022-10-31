@@ -6,5 +6,5 @@ namespace Siemieniec\AmqpMessageBus\Handler;
 
 interface HandlerRegistryInterface
 {
-    public function getHandler(object $message): HandlerInterface;
+    public function getHandler(object $message): callable;
 }

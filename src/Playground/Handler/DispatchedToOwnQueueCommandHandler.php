@@ -6,9 +6,10 @@ namespace App\Handler;
 
 use App\Command\DispatchedToOwnQueueCommand;
 use App\Service\SomeTestService;
-use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Attributes\AsMessageHandler;
 
-final class DispatchedToOwnQueueCommandHandler implements HandlerInterface
+#[AsMessageHandler]
+final class DispatchedToOwnQueueCommandHandler
 {
     public function __construct(
         private SomeTestService $service

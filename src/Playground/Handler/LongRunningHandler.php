@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\Command\LongRunningCommand;
-use Siemieniec\AmqpMessageBus\Handler\HandlerInterface;
+use Siemieniec\AmqpMessageBus\Attributes\AsMessageHandler;
 
-class LongRunningHandler implements HandlerInterface
+#[AsMessageHandler]
+class LongRunningHandler
 {
     public function __invoke(LongRunningCommand $command): void
     {

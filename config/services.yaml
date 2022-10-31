@@ -53,7 +53,7 @@ parameters:
                     x-message-ttl: 200
         messages:
             App\Command\AnotherSimpleCommand:
-                serializer: App\Serializer\SampleCommandSerializer
+                serializer: App\Serializer\SampleMessageSerializer
                 publisher:
                     exchange:
                         name: delayed_exchange
@@ -87,8 +87,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    Siemieniec\AmqpMessageBus\ConfigFactory: ~
+    Siemieniec\AmqpMessageBus\Config\ConfigFactory: ~
 
     Siemieniec\AmqpMessageBus\Config\Config:
-        factory: ['@Siemieniec\AsyncCommandBus\Config\ConfigFactory', 'create']
+        factory: ['@Siemieniec\AmqpMessageBus\Config\ConfigFactory', 'create']
         arguments: ['%amqp_message_bus%']

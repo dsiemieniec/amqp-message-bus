@@ -10,18 +10,18 @@ use Siemieniec\AmqpMessageBus\Exception\HandlerMissingException;
 final class HandlerRegistry implements HandlerRegistryInterface
 {
     /**
-     * @var array<string, HandlerInterface>
+     * @var array<string, callable>
      */
     private array $registry = [];
 
-    public function registerHandler(string $messageClass, HandlerInterface $handler): void
+    public function registerHandler(string $messageClass, callable $handler): void
     {
         if (isset($this->registry[$messageClass])) {
             throw new HandlerDuplicateException(
                 \sprintf(
                     'Message %s already has handler %s',
                     $messageClass,
-                    \get_class($this->registry[$messageClass])
+                    \get_debug_type($this->registry[$messageClass])
                 )
             );
         }
@@ -29,12 +29,12 @@ final class HandlerRegistry implements HandlerRegistryInterface
         $this->registry[$messageClass] = $handler;
     }
 
-    public function getHandler(object $message): HandlerInterface
+    public function getHandler(object $message): callable
     {
         return $this->getHandlerByClass(\get_class($message));
     }
 
-    public function getHandlerByClass(string $messageClass): HandlerInterface
+    public function getHandlerByClass(string $messageClass): callable
     {
         if (!isset($this->registry[$messageClass])) {
             throw new HandlerMissingException(\sprintf('Handler not registered for message %s', $messageClass));
