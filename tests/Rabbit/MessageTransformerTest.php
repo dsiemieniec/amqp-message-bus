@@ -1,26 +1,23 @@
 <?php
 
-namespace App\Tests\Rabbit;
+declare(strict_types=1);
 
-use App\Command\Properties\CommandProperties;
-use App\Command\Properties\DeliveryMode;
-use App\Rabbit\MessageEnvelope;
-use App\Rabbit\MessageTransformer;
+namespace Siemieniec\AmqpMessageBus\Tests\Rabbit;
+
+use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
+use Siemieniec\AmqpMessageBus\Message\Properties\DeliveryMode;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelope;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformer;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;
 
 class MessageTransformerTest extends TestCase
 {
-    private function getTransformer(): MessageTransformer
-    {
-        return new MessageTransformer();
-    }
-
     public function testShouldTransformMessage(): void
     {
         $body = 'Test message body';
-        $commandClass = 'TestCommand';
+        $messageClass = 'TestCommand';
 
         $contentType = 'json';
         $contentEncoding = 'UTF-8';
@@ -49,7 +46,7 @@ class MessageTransformerTest extends TestCase
             'expiration' => $expiration,
             'message_id' => $messageId,
             'timestamp' => $timestamp,
-            'type' => $commandClass,
+            'type' => $messageClass,
             'user_id' => $userId,
             'app_id' => $appId,
             'cluster_id' => $clusterId,
@@ -61,7 +58,7 @@ class MessageTransformerTest extends TestCase
         $message->method('get_properties')->willReturn($properties);
 
         $envelope = $this->getTransformer()->transformMessage($message);
-        self::assertEquals($commandClass, $envelope->getCommandClass());
+        self::assertEquals($messageClass, $envelope->getMessageClass());
         self::assertEquals($body, $envelope->getBody());
 
         $properties = $envelope->getProperties();
@@ -89,14 +86,14 @@ class MessageTransformerTest extends TestCase
         $message->method('get_properties')->willReturn([]);
 
         $envelope = $this->getTransformer()->transformMessage($message);
-        self::assertEquals('', $envelope->getCommandClass());
+        self::assertEquals('', $envelope->getMessageClass());
         self::assertEquals($body, $envelope->getBody());
     }
 
     public function testShouldTransformEnvelope(): void
     {
         $body = 'Test message body';
-        $commandClass = 'TestCommand';
+        $messageClass = 'TestCommand';
 
         $contentType = 'json';
         $contentEncoding = 'UTF-8';
@@ -115,7 +112,7 @@ class MessageTransformerTest extends TestCase
             'second-header' => 'second-header-value'
         ]);
 
-        $properties = CommandProperties::builder()
+        $properties = MessageProperties::builder()
             ->contentType($contentType)
             ->contentEncoding($contentEncoding)
             ->deliveryMode($deliveryMode)
@@ -132,12 +129,12 @@ class MessageTransformerTest extends TestCase
             ->addHeader('second-header', 'second-header-value')
             ->build();
 
-        $envelope = new MessageEnvelope($body, $commandClass, $properties);
+        $envelope = new MessageEnvelope($body, $messageClass, $properties);
         $message = $this->getTransformer()->transformEnvelope($envelope);
         $properties = $message->get_properties();
 
         self::assertEquals($body, $message->getBody());
-        self::assertEquals($commandClass, $properties['type']);
+        self::assertEquals($messageClass, $properties['type']);
         self::assertEquals($contentType, $properties['content_type']);
         self::assertEquals($contentEncoding, $properties['content_encoding']);
         self::assertEquals($deliveryMode->value, $properties['delivery_mode']);
@@ -164,5 +161,10 @@ class MessageTransformerTest extends TestCase
 
         self::assertEquals($body, $message->getBody());
         self::assertEquals($commandClass, $properties['type']);
+    }
+
+    private function getTransformer(): MessageTransformer
+    {
+        return new MessageTransformer();
     }
 }

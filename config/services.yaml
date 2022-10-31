@@ -4,7 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    async_command_bus:
+    amqp_message_bus:
         auto_declare: true
         connections:
             default:
@@ -51,9 +51,9 @@ parameters:
             queue_with_arguments:
                 arguments:
                     x-message-ttl: 200
-        commands:
+        messages:
             App\Command\AnotherSimpleCommand:
-                serializer: App\Serializer\SampleCommandSerializer
+                serializer: App\Serializer\SampleMessageSerializer
                 publisher:
                     exchange:
                         name: delayed_exchange
@@ -76,16 +76,19 @@ services:
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
-        resource: '../src/'
+        resource: '../src/Playground/'
         exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+            - '../src/Playground/DependencyInjection/'
+            - '../src/Playground/Entity/'
+            - '../src/Playground/Kernel.php'
+
+    Siemieniec\AmqpMessageBus\:
+        resource: '../src/AmqpMessageBus/'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Config\ConfigFactory: ~
+    Siemieniec\AmqpMessageBus\Config\ConfigFactory: ~
 
-    App\Config\Config:
-        factory: ['@App\Config\ConfigFactory', 'create']
-        arguments: ['%async_command_bus%']
+    Siemieniec\AmqpMessageBus\Config\Config:
+        factory: ['@Siemieniec\AmqpMessageBus\Config\ConfigFactory', 'create']
+        arguments: ['%amqp_message_bus%']

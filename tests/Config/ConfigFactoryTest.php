@@ -1,23 +1,17 @@
 <?php
 
-namespace App\Tests\Config;
+declare(strict_types=1);
 
-use App\Config\ConfigFactory;
-use App\Config\Queue;
-use App\Exception\MissingConnectionException;
-use App\Exception\MissingExchangeException;
-use App\Exception\MissingQueueException;
-use App\Serializer\DefaultCommandSerializer;
-use InvalidArgumentException;
+namespace Siemieniec\AmqpMessageBus\Tests\Config;
+
+use Siemieniec\AmqpMessageBus\Config\ConfigFactory;
+use Siemieniec\AmqpMessageBus\Exception\MissingConnectionException;
+use Siemieniec\AmqpMessageBus\Exception\MissingQueueException;
+use Siemieniec\AmqpMessageBus\Serializer\DefaultMessageSerializer;
 use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
 {
-    private function getConfigFactory(): ConfigFactory
-    {
-        return new ConfigFactory();
-    }
-
     public function testShouldCreateDefaultConfigWithMinimalParameters(): void
     {
         $data = [
@@ -31,15 +25,15 @@ class ConfigFactoryTest extends TestCase
             ]
         ];
 
-        $commandClass = 'TestCommand';
+        $messageClass = 'TestCommand';
         $config = $this->getConfigFactory()->create($data);
 
-        $commandConfig = $config->getCommandConfig($commandClass);
-        self::assertEquals($commandClass, $commandConfig->getCommandClass());
-        self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
+        $messageConfig = $config->getMessageConfig($messageClass);
+        self::assertEquals($messageClass, $messageConfig->getMessageClass());
+        self::assertEquals(DefaultMessageSerializer::class, $messageConfig->getSerializerClass());
 
-        $publisherConfig = $commandConfig->getPublisherConfig();
-        self::assertEquals('async_command_bus', $publisherConfig->getPublisherTarget()->getRoutingKey());
+        $publisherConfig = $messageConfig->getPublisherConfig();
+        self::assertEquals('amqp_message_bus', $publisherConfig->getPublisherTarget()->getRoutingKey());
         self::assertEquals('', $publisherConfig->getPublisherTarget()->getExchange());
 
         $publisherConnectionConfig = $publisherConfig->getConnection();
@@ -51,7 +45,7 @@ class ConfigFactoryTest extends TestCase
         self::assertEquals('/', $publisherConnectionConfig->getVHost());
 
         $defaultQueueConfig = $config->getQueueConfig('default');
-        self::assertEquals('async_command_bus', $defaultQueueConfig->getName());
+        self::assertEquals('amqp_message_bus', $defaultQueueConfig->getName());
         self::assertFalse($defaultQueueConfig->isPassive());
         self::assertFalse($defaultQueueConfig->isDurable());
         self::assertFalse($defaultQueueConfig->isAutoDelete());
@@ -84,10 +78,10 @@ class ConfigFactoryTest extends TestCase
             ],
         ];
 
-        $commandClass = 'TestCommand';
+        $messageClass = 'TestCommand';
         $config = $this->getConfigFactory()->create($data);
 
-        $publisherConfig = $config->getCommandConfig($commandClass)->getPublisherConfig();
+        $publisherConfig = $config->getMessageConfig($messageClass)->getPublisherConfig();
         self::assertEquals('default_queue', $publisherConfig->getPublisherTarget()->getRoutingKey());
         self::assertEquals('', $publisherConfig->getPublisherTarget()->getExchange());
 
@@ -136,7 +130,7 @@ class ConfigFactoryTest extends TestCase
                     'name' => 'custom_queue'
                 ]
             ],
-            'commands' => [
+            'messages' => [
                 'TestCommand' => [
                     'serializer' => 'TestCommandSerializer',
                     'publisher' => [
@@ -147,12 +141,12 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $config = $this->getConfigFactory()->create($data);
-        $commandConfig = $config->getCommandConfig('TestCommand');
-        self::assertEquals('TestCommand', $commandConfig->getCommandClass());
-        self::assertEquals('TestCommandSerializer', $commandConfig->getSerializerClass());
-        self::assertFalse($commandConfig->requeueOnFailure());
+        $messageConfig = $config->getMessageConfig('TestCommand');
+        self::assertEquals('TestCommand', $messageConfig->getMessageClass());
+        self::assertEquals('TestCommandSerializer', $messageConfig->getSerializerClass());
+        self::assertFalse($messageConfig->requeueOnFailure());
 
-        $publisherConfig = $commandConfig->getPublisherConfig();
+        $publisherConfig = $messageConfig->getPublisherConfig();
         self::assertEquals('custom_queue', $publisherConfig->getPublisherTarget()->getRoutingKey());
         self::assertEquals('', $publisherConfig->getPublisherTarget()->getExchange());
 
@@ -187,7 +181,7 @@ class ConfigFactoryTest extends TestCase
                     ]
                 ]
             ],
-            'commands' => [
+            'messages' => [
                 'TestCommand' => [
                     'requeue_on_failure' => true,
                     'publisher' => [
@@ -201,12 +195,12 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $config = $this->getConfigFactory()->create($data);
-        $commandConfig = $config->getCommandConfig('TestCommand');
-        self::assertEquals('TestCommand', $commandConfig->getCommandClass());
-        self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
-        self::assertTrue($commandConfig->requeueOnFailure());
+        $messageConfig = $config->getMessageConfig('TestCommand');
+        self::assertEquals('TestCommand', $messageConfig->getMessageClass());
+        self::assertEquals(DefaultMessageSerializer::class, $messageConfig->getSerializerClass());
+        self::assertTrue($messageConfig->requeueOnFailure());
 
-        $publisherConfig = $commandConfig->getPublisherConfig();
+        $publisherConfig = $messageConfig->getPublisherConfig();
         self::assertEquals('test_routing_key', $publisherConfig->getPublisherTarget()->getRoutingKey());
         self::assertEquals('test_exchange', $publisherConfig->getPublisherTarget()->getExchange());
 
@@ -224,7 +218,7 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($exchange->canAutoDeclare());
 
         $binding = $exchange->getQueueBindings()[0];
-        self::assertEquals('async_command_bus', $binding->getQueue()->getName());
+        self::assertEquals('amqp_message_bus', $binding->getQueue()->getName());
         self::assertEquals('test_routing_key', $binding->getRoutingKey());
     }
 
@@ -256,7 +250,7 @@ class ConfigFactoryTest extends TestCase
                     ]
                 ]
             ],
-            'commands' => [
+            'messages' => [
                 'TestCommand' => [
                     'publisher' => [
                         'exchange' => [
@@ -269,11 +263,11 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $config = $this->getConfigFactory()->create($data);
-        $commandConfig = $config->getCommandConfig('TestCommand');
-        self::assertEquals('TestCommand', $commandConfig->getCommandClass());
-        self::assertEquals(DefaultCommandSerializer::class, $commandConfig->getSerializerClass());
+        $messageConfig = $config->getMessageConfig('TestCommand');
+        self::assertEquals('TestCommand', $messageConfig->getMessageClass());
+        self::assertEquals(DefaultMessageSerializer::class, $messageConfig->getSerializerClass());
 
-        $publisherConfig = $commandConfig->getPublisherConfig();
+        $publisherConfig = $messageConfig->getPublisherConfig();
         self::assertEquals('test_routing_key', $publisherConfig->getPublisherTarget()->getRoutingKey());
         self::assertEquals('test_exchange', $publisherConfig->getPublisherTarget()->getExchange());
 
@@ -556,7 +550,7 @@ class ConfigFactoryTest extends TestCase
                     ]
                 ]
             ],
-            'commands' => [
+            'messages' => [
                 'TestCommand' => [
                     'publisher' => [
                         'exchange' => [
@@ -604,7 +598,7 @@ class ConfigFactoryTest extends TestCase
                     ]
                 ]
             ],
-            'commands' => [
+            'messages' => [
                 'TestCommand' => [
                     'publisher' => [
                         'exchange' => [
@@ -637,7 +631,7 @@ class ConfigFactoryTest extends TestCase
         ];
 
         $config = $this->getConfigFactory()->create($data);
-        $connection = $config->getCommandConfig('TestCommand')->getPublisherConfig()->getConnection();
+        $connection = $config->getMessageConfig('TestCommand')->getPublisherConfig()->getConnection();
         self::assertEquals(5672, $connection->getPort());
     }
 
@@ -721,5 +715,10 @@ class ConfigFactoryTest extends TestCase
             self::assertEquals(12, $consumer->getWaitTimeout(), 'wait timeout');
             self::assertEquals(1000, $consumer->getMessagesLimit(), 'messages limit');
         }
+    }
+
+    private function getConfigFactory(): ConfigFactory
+    {
+        return new ConfigFactory();
     }
 }
