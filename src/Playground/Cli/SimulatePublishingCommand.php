@@ -31,22 +31,6 @@ class SimulatePublishingCommand extends Command
         parent::__construct();
     }
 
-    public function getRandomCommand(): AbstractLongRunningCommand
-    {
-        $i = \random_int(0, 2);
-        if ($i === 0) {
-            return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
-        } elseif ($i === 1) {
-            return new AnotherSimpleCommand(
-                \uniqid('', true),
-                \uniqid('', true),
-                new DateTimeImmutable()
-            );
-        }
-
-        return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));
-    }
-
     protected function configure(): void
     {
         $this
@@ -62,20 +46,42 @@ class SimulatePublishingCommand extends Command
 
         $progressBar->start();
 
-        for ($i = 0; $i < $numberOfCommands; $i++) {
-            $properties = MessageProperties::builder()
-                ->addHeader('x-delay', (string) Delay::seconds(\random_int(1, 15)))
-                ->build();
-            $this->messagePublisher->publish(
-                $this->getRandomCommand()->setExecutionTime(\random_int(0, 5)),
-                $properties
-            );
+        while ($numberOfCommands > 0) {
+            $i = \random_int(1, 30);
+            while ($i > 0 && $numberOfCommands > 0) {
+                $properties = MessageProperties::builder()
+                    ->addHeader('x-delay', (string) Delay::seconds(\random_int(1, 15)))
+                    ->build();
+                $this->messagePublisher->publish(
+                    $this->getRandomCommand()->setExecutionTime(\random_int(0, 5)),
+                    $properties
+                );
 
-            $progressBar->advance();
+                --$i;
+                --$numberOfCommands;
+                $progressBar->advance();
+            }
+            \sleep(\random_int(1, 15));
         }
         $progressBar->finish();
         $io->success('Done');
 
         return Command::SUCCESS;
+    }
+
+    private function getRandomCommand(): AbstractLongRunningCommand
+    {
+        $i = \random_int(0, 2);
+        if ($i === 0) {
+            return new SimpleCommand(\random_int($i, 99999999), \uniqid('', true));
+        } elseif ($i === 1) {
+            return new AnotherSimpleCommand(
+                \uniqid('', true),
+                \uniqid('', true),
+                new DateTimeImmutable()
+            );
+        }
+
+        return new DispatchedToOwnQueueCommand(\random_int($i, 99999999), \uniqid('', true));
     }
 }
