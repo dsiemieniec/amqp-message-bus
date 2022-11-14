@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Rabbit;
 
+use Psr\Log\LoggerInterface;
 use Siemieniec\AmqpMessageBus\Config\Queue;
 
 class MessageConsumer implements MessageConsumerInterface
@@ -12,9 +13,10 @@ class MessageConsumer implements MessageConsumerInterface
 
     public function __construct(
         private Queue $queueConfig,
-        private ConsumerCallbackInterface $callback
+        private ConsumerCallbackInterface $callback,
+        private LoggerInterface $logger
     ) {
-        $this->connection = new RabbitConnection($queueConfig->getConnection());
+        $this->connection = new RabbitConnection($queueConfig->getConnection(), $this->logger);
     }
 
     public function consume(): void

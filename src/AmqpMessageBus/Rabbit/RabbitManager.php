@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Rabbit;
 
+use Psr\Log\LoggerInterface;
 use Siemieniec\AmqpMessageBus\Config\Config;
 use Siemieniec\AmqpMessageBus\Config\Connection;
 use Siemieniec\AmqpMessageBus\Config\Exchange;
@@ -12,7 +13,8 @@ use Siemieniec\AmqpMessageBus\Config\Queue;
 class RabbitManager
 {
     public function __construct(
-        private Config $config
+        private Config $config,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -53,6 +55,6 @@ class RabbitManager
 
     private function getRabbitConnection(Connection $connectionConfig): RabbitConnection
     {
-        return new RabbitConnection($connectionConfig);
+        return new RabbitConnection($connectionConfig, $this->logger);
     }
 }

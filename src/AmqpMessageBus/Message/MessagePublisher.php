@@ -56,7 +56,7 @@ final class MessagePublisher implements MessagePublisherInterface
     private function getConnection(ConnectionConfig $connectionConfig): ConnectionInterface
     {
         if (!\array_key_exists($connectionConfig->getName(), $this->connections)) {
-            $this->connections[$connectionConfig->getName()] = new RabbitConnection($connectionConfig);
+            $this->connections[$connectionConfig->getName()] = new RabbitConnection($connectionConfig, $this->logger);
         }
 
         return $this->connections[$connectionConfig->getName()];

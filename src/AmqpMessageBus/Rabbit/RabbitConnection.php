@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Rabbit;
 
+use PhpAmqpLib\Exception\AMQPChannelClosedException;
+use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
+use Psr\Log\LoggerInterface;
 use Siemieniec\AmqpMessageBus\Config\Connection;
 use Siemieniec\AmqpMessageBus\Config\ConsumerParameters;
 use Siemieniec\AmqpMessageBus\Config\Exchange;
 use Siemieniec\AmqpMessageBus\Config\PublisherTarget;
 use Siemieniec\AmqpMessageBus\Config\Queue;
 use Siemieniec\AmqpMessageBus\Config\QueueBinding;
-use Siemieniec\AmqpMessageBus\Exception\MessageLimitException;
-use Siemieniec\AmqpMessageBus\Exception\TimeLimitException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -23,8 +25,9 @@ class RabbitConnection implements ConnectionInterface
     private AMQPStreamConnection $connection;
     private AMQPChannel $channel;
     private bool $consumerStopped = false;
+    private ?string $consumerTag = null;
 
-    public function __construct(Connection $connectionConfig)
+    public function __construct(Connection $connectionConfig, private LoggerInterface $logger)
     {
         $this->connection = new AMQPStreamConnection(
             host: $connectionConfig->getHost(),
@@ -108,8 +111,11 @@ class RabbitConnection implements ConnectionInterface
 
     public function stopConsumer(): void
     {
-        $this->channel->stopConsume();
         $this->consumerStopped = true;
+        if (!empty($this->consumerTag)) {
+            $this->channel->basic_cancel($this->consumerTag, false, true);
+            $this->consumerTag = null;
+        }
     }
 
     private function calculateTimeout(int $startedAt, ConsumerParameters $parameters): int
@@ -118,14 +124,10 @@ class RabbitConnection implements ConnectionInterface
         if ($parameters->hasTimeLimit()) {
             $finishAt = $startedAt + $parameters->getTimeLimit();
             $finishTimeout = $finishAt - \time();
-            if ($finishTimeout <= 1) {
-                return 1;
-            } else {
-                return $finishTimeout;
-            }
+            $timeout = \min($timeout, $finishTimeout);
         }
 
-        return $timeout;
+        return \max($timeout, 1);
     }
 
     private function timeLimitExceeded(int $startedAt, ConsumerParameters $parameters): bool
@@ -138,8 +140,8 @@ class RabbitConnection implements ConnectionInterface
         $this->consumerStopped = false;
         $parameters = $queue->getConsumerParameters();
 
-        $this->channel->basic_qos(0, 1, false);
-        $this->channel->basic_consume(
+        $this->channel->basic_qos(0, $queue->getConsumerParameters()->getPrefetchCount(), false);
+        $this->consumerTag = $this->channel->basic_consume(
             $queue->getName(),
             $parameters->getTag(),
             !$parameters->isLocal(),
@@ -152,35 +154,63 @@ class RabbitConnection implements ConnectionInterface
 
     private function runConsumer(Queue $queue): void
     {
-        $parameters = $queue->getConsumerParameters();
+        $this->checkConnection();
 
+        $parameters = $queue->getConsumerParameters();
         $startedAt = \time();
         $consumedMessages = 0;
-        while ($this->channel->is_open() && !$this->consumerStopped) {
-            $timeout = $this->calculateTimeout($startedAt, $parameters);
-            if ($timeout > 0 && $timeout <= 1) {
-                $this->stopConsumer();
+
+        while ($this->channel->is_consuming()) {
+            if ($this->consumerStopped) {
+                $this->consumerStopped = false;
+                return;
             }
-            $this->channel->wait(null, false, $timeout);
-            ++$consumedMessages;
             $this->assertConsumedMessagesLimit($parameters, $consumedMessages);
             $this->assertConsumerTimeLimit($startedAt, $parameters);
+            $timeout = $this->calculateTimeout($startedAt, $parameters);
+            try {
+                $this->channel->wait(null, false, $timeout);
+                ++$consumedMessages;
+            } catch (AMQPTimeoutException) {
+                $this->connection->checkHeartBeat();
+                continue;
+            }
         }
     }
 
     private function assertConsumedMessagesLimit(ConsumerParameters $parameters, int $consumedMessages): void
     {
         if ($parameters->hasMessagesLimit() && $consumedMessages >= $parameters->getMessagesLimit()) {
+            $this->logger->warning(
+                \sprintf(
+                    'Limit of %d messages has been reached. Stopping consumer...',
+                    $parameters->getMessagesLimit()
+                )
+            );
             $this->stopConsumer();
-            throw new MessageLimitException($parameters->getMessagesLimit());
         }
     }
 
     private function assertConsumerTimeLimit(int $startedAt, ConsumerParameters $parameters): void
     {
         if ($this->timeLimitExceeded($startedAt, $parameters)) {
+            $this->logger->warning(
+                \sprintf(
+                    'Time limit of %d seconds has been reached. Stopping consumer...',
+                    $parameters->getTimeLimit()
+                )
+            );
             $this->stopConsumer();
-            throw new TimeLimitException($parameters->getTimeLimit());
+        }
+    }
+
+    private function checkConnection(): void
+    {
+        if (!$this->connection->isConnected()) {
+            throw new AMQPChannelClosedException('Channel connection is closed.');
+        }
+        if ($this->connection->isBlocked()) {
+            throw new AMQPConnectionBlockedException();
         }
     }
 }

@@ -23,8 +23,8 @@ use Throwable;
 )]
 class ConsumeMessagesCommand extends Command
 {
-    private MessageConsumer $consumer;
-    private string $name;
+    private ?MessageConsumer $consumer = null;
+    private string $name = '';
 
     public function __construct(
         private MessageConsumerFactory $consumerFactory,
@@ -46,6 +46,7 @@ class ConsumeMessagesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $return = Command::SUCCESS;
         try {
             $this->name = $input->getArgument('name');
             $io->info(\sprintf('Starting %s consumer...', $this->name));
@@ -57,10 +58,12 @@ class ConsumeMessagesCommand extends Command
         } catch (Throwable $exception) {
             $this->logger->error($exception->getMessage());
 
-            return Command::FAILURE;
+            $return = Command::FAILURE;
+        } finally {
+            $this->consumer?->stop();
         }
 
-        return Command::SUCCESS;
+        return $return;
     }
 
     private function onShutdown(int $signalNumber): void
@@ -72,6 +75,6 @@ class ConsumeMessagesCommand extends Command
             $this->name
         );
         $this->logger->warning($message);
-        $this->consumer->stop();
+        $this->consumer?->stop();
     }
 }

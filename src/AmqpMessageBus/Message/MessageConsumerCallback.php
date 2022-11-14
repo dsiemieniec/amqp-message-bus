@@ -35,7 +35,7 @@ final class MessageConsumerCallback implements ConsumerCallbackInterface
 
             $this->handlerInvoker->handle($message);
 
-            $connection->ack($amqpMessage);
+            $amqpMessage->ack();
         } catch (HandlersFailedException $exception) {
             $this->logger->error($exception->getMessage(), [
                 'trace' => $exception->getMessage(),
@@ -48,8 +48,7 @@ final class MessageConsumerCallback implements ConsumerCallbackInterface
                 )
             ]);
             if (isset($message)) {
-                $connection->nack(
-                    $amqpMessage,
+                $amqpMessage->nack(
                     $this->config->getMessageConfig(\get_class($message))->requeueOnFailure()
                 );
             }
