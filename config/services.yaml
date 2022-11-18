@@ -37,9 +37,6 @@ parameters:
                 queue_bindings:
                     - {queue: first_queue_name, routing_key: another_simple_command}
         queues:
-            default:
-                consumer:
-                    time_limit: 60
             first_queue_name:
                 connection: default
                 name: first_queue

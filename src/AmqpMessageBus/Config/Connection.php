@@ -17,13 +17,12 @@ class Connection
     public const DEFAULT_HEARTBEAT = 0;
     public const DEFAULT_SSL_PROTOCOL = null;
 
+    /**
+     * @param ConnectionCredentials[] $connectionCredentials
+     */
     public function __construct(
         private string $name,
-        private string $host,
-        private int $port,
-        private string $user,
-        private string $password,
-        private string $vHost = self::DEFAULT_VHOST,
+        private array $connectionCredentials,
         private bool $insist = self::DEFAULT_INSIST,
         private string $loginMethod = self::DEFAULT_LOGIN_METHOD,
         private string $locale = self::DEFAULT_LOCALE,
@@ -35,34 +34,17 @@ class Connection
     ) {
     }
 
+    /**
+     * @return ConnectionCredentials[]
+     */
+    public function getConnectionCredentials(): array
+    {
+        return $this->connectionCredentials;
+    }
+
     public function getName(): string
     {
         return $this->name;
-    }
-
-    public function getHost(): string
-    {
-        return $this->host;
-    }
-
-    public function getPort(): int
-    {
-        return $this->port;
-    }
-
-    public function getUser(): string
-    {
-        return $this->user;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function getVHost(): string
-    {
-        return $this->vHost;
     }
 
     public function isInsist(): bool
@@ -103,14 +85,5 @@ class Connection
     public function getSslProtocol(): ?string
     {
         return $this->sslProtocol;
-    }
-
-    public function equals(Connection $connection): bool
-    {
-        return $this->getHost() === $connection->getHost()
-            && $this->getUser() === $connection->getUser()
-            && $this->getPassword() === $connection->getPassword()
-            && $this->getPort() === $connection->getPort()
-            && $this->getVHost() === $connection->getVHost();
     }
 }

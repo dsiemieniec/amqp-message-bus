@@ -39,11 +39,12 @@ class ConfigFactoryTest extends TestCase
 
         $publisherConnectionConfig = $publisherConfig->getConnection();
         self::assertEquals('default', $publisherConnectionConfig->getName());
-        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
-        self::assertEquals(5672, $publisherConnectionConfig->getPort());
-        self::assertEquals('guest', $publisherConnectionConfig->getUser());
-        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
-        self::assertEquals('/', $publisherConnectionConfig->getVHost());
+        $publisherConnectionConfigCredentials = $publisherConnectionConfig->getConnectionCredentials()[0];
+        self::assertEquals('localhost', $publisherConnectionConfigCredentials->getHost());
+        self::assertEquals(5672, $publisherConnectionConfigCredentials->getPort());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getUser());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getPassword());
+        self::assertEquals('/', $publisherConnectionConfigCredentials->getVHost());
         self::assertEquals(Connection::DEFAULT_INSIST, $publisherConnectionConfig->isInsist());
         self::assertEquals(Connection::DEFAULT_LOGIN_METHOD, $publisherConnectionConfig->getLoginMethod());
         self::assertEquals(Connection::DEFAULT_LOCALE, $publisherConnectionConfig->getLocale());
@@ -61,7 +62,8 @@ class ConfigFactoryTest extends TestCase
         self::assertFalse($defaultQueueConfig->isExclusive());
         self::assertFalse($defaultQueueConfig->canAutoDeclare());
         self::assertEquals($publisherConnectionConfig, $defaultQueueConfig->getConnection());
-        self::assertTrue($publisherConnectionConfig->equals($defaultQueueConfig->getConnection()));
+        $defaultQueueConfigCredentials = $defaultQueueConfig->getConnection()->getConnectionCredentials()[0];
+        self::assertTrue($publisherConnectionConfigCredentials->equals($defaultQueueConfigCredentials));
     }
 
     public function testShouldOverwriteDefaultQueueConfig(): void
@@ -104,15 +106,16 @@ class ConfigFactoryTest extends TestCase
         self::assertTrue($defaultQueueConfig->isExclusive());
         self::assertTrue($defaultQueueConfig->canAutoDeclare());
         self::assertEquals($publisherConnectionConfig, $defaultQueueConfig->getConnection());
-        self::assertTrue($publisherConnectionConfig->equals($defaultQueueConfig->getConnection()));
-
+        $publisherConnectionConfigCredentials = $publisherConnectionConfig->getConnectionCredentials()[0];
         $defaultQueueConnection = $defaultQueueConfig->getConnection();
+        $defaultQueueConfigCredentials = $defaultQueueConnection->getConnectionCredentials()[0];
+        self::assertTrue($publisherConnectionConfigCredentials->equals($defaultQueueConfigCredentials));
         self::assertEquals('default', $defaultQueueConnection->getName());
-        self::assertEquals('localhost', $defaultQueueConnection->getHost());
-        self::assertEquals(5672, $defaultQueueConnection->getPort());
-        self::assertEquals('guest', $defaultQueueConnection->getUser());
-        self::assertEquals('guest', $defaultQueueConnection->getPassword());
-        self::assertEquals('/', $defaultQueueConnection->getVHost());
+        self::assertEquals('localhost', $defaultQueueConfigCredentials->getHost());
+        self::assertEquals(5672, $defaultQueueConfigCredentials->getPort());
+        self::assertEquals('guest', $defaultQueueConfigCredentials->getUser());
+        self::assertEquals('guest', $defaultQueueConfigCredentials->getPassword());
+        self::assertEquals('/', $defaultQueueConfigCredentials->getVHost());
     }
 
     public function testShouldDefineCommandPublishedToCustomQueue(): void
@@ -169,11 +172,12 @@ class ConfigFactoryTest extends TestCase
 
         $publisherConnectionConfig = $publisherConfig->getConnection();
         self::assertEquals('second', $publisherConnectionConfig->getName());
-        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
-        self::assertEquals(5672, $publisherConnectionConfig->getPort());
-        self::assertEquals('guest', $publisherConnectionConfig->getUser());
-        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
-        self::assertEquals('test_vhost', $publisherConnectionConfig->getVHost());
+        $publisherConnectionConfigCredentials = $publisherConnectionConfig->getConnectionCredentials()[0];
+        self::assertEquals('localhost', $publisherConnectionConfigCredentials->getHost());
+        self::assertEquals(5672, $publisherConnectionConfigCredentials->getPort());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getUser());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getPassword());
+        self::assertEquals('test_vhost', $publisherConnectionConfigCredentials->getVHost());
         self::assertEquals(true, $publisherConnectionConfig->isInsist());
         self::assertEquals('PLAIN', $publisherConnectionConfig->getLoginMethod());
         self::assertEquals('pl_PL', $publisherConnectionConfig->getLocale());
@@ -231,11 +235,12 @@ class ConfigFactoryTest extends TestCase
 
         $publisherConnectionConfig = $publisherConfig->getConnection();
         self::assertEquals('default', $publisherConnectionConfig->getName());
-        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
-        self::assertEquals(5672, $publisherConnectionConfig->getPort());
-        self::assertEquals('guest', $publisherConnectionConfig->getUser());
-        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
-        self::assertEquals('/', $publisherConnectionConfig->getVHost());
+        $publisherConnectionConfigCredentials = $publisherConnectionConfig->getConnectionCredentials()[0];
+        self::assertEquals('localhost', $publisherConnectionConfigCredentials->getHost());
+        self::assertEquals(5672, $publisherConnectionConfigCredentials->getPort());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getUser());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getPassword());
+        self::assertEquals('/', $publisherConnectionConfigCredentials->getVHost());
 
         $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('test_exchange', $exchange->getName());
@@ -298,11 +303,12 @@ class ConfigFactoryTest extends TestCase
 
         $publisherConnectionConfig = $publisherConfig->getConnection();
         self::assertEquals('default', $publisherConnectionConfig->getName());
-        self::assertEquals('localhost', $publisherConnectionConfig->getHost());
-        self::assertEquals(5672, $publisherConnectionConfig->getPort());
-        self::assertEquals('guest', $publisherConnectionConfig->getUser());
-        self::assertEquals('guest', $publisherConnectionConfig->getPassword());
-        self::assertEquals('/', $publisherConnectionConfig->getVHost());
+        $publisherConnectionConfigCredentials = $publisherConnectionConfig->getConnectionCredentials()[0];
+        self::assertEquals('localhost', $publisherConnectionConfigCredentials->getHost());
+        self::assertEquals(5672, $publisherConnectionConfigCredentials->getPort());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getUser());
+        self::assertEquals('guest', $publisherConnectionConfigCredentials->getPassword());
+        self::assertEquals('/', $publisherConnectionConfigCredentials->getVHost());
 
         $exchange = $config->getAllExchanges()['test_exchange_name'];
         self::assertEquals('test_exchange', $exchange->getName());
@@ -665,7 +671,8 @@ class ConfigFactoryTest extends TestCase
 
         $config = $this->getConfigFactory()->create($data);
         $connection = $config->getMessageConfig('TestCommand')->getPublisherConfig()->getConnection();
-        self::assertEquals(5672, $connection->getPort());
+        $connectionCredentials = $connection->getConnectionCredentials()[0];
+        self::assertEquals(5672, $connectionCredentials->getPort());
         self::assertEquals(true, $connection->isInsist());
         self::assertEquals('PLAIN', $connection->getLoginMethod());
         self::assertEquals('pl_PL', $connection->getLocale());
@@ -755,6 +762,49 @@ class ConfigFactoryTest extends TestCase
             self::assertEquals(11, $consumer->getTimeLimit(), 'time limit');
             self::assertEquals(12, $consumer->getWaitTimeout(), 'wait timeout');
             self::assertEquals(1000, $consumer->getMessagesLimit(), 'messages limit');
+        }
+    }
+
+    public function testShouldConfigureMultipleNode(): void
+    {
+        $nodes = [
+            [
+                'host' => 'localhost',
+                'port' => 5672,
+                'user' => 'guest',
+                'password' => 'guest'
+            ],
+            [
+                'host' => 'localhost',
+                'port' => 5673,
+                'user' => 'guest',
+                'password' => 'guest'
+            ],
+            [
+                'host' => 'localhost',
+                'port' => 5674,
+                'user' => 'guest',
+                'password' => 'guest'
+            ]
+        ];
+
+        $data = [
+            'connections' => [
+                'default' => [
+                    'nodes' => $nodes
+                ]
+            ]
+        ];
+
+        $config = $this->getConfigFactory()->create($data);
+        $connectionCredentials = $config->getQueueConfig('default')->getConnection()->getConnectionCredentials();
+        self::assertEquals(\count($nodes), \count($connectionCredentials));
+        foreach ($connectionCredentials as $key => $credentials) {
+            $node = $nodes[$key];
+            self::assertEquals($node['host'], $credentials->getHost());
+            self::assertEquals($node['port'], $credentials->getPort());
+            self::assertEquals($node['user'], $credentials->getUser());
+            self::assertEquals($node['password'], $credentials->getPassword());
         }
     }
 

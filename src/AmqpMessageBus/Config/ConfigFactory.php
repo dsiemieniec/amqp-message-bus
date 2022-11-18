@@ -52,13 +52,20 @@ final class ConfigFactory
     private function readConnections(): void
     {
         foreach ($this->config['connections'] ?? [] as $name => $params) {
+            $connectionCredentials = \array_map(
+                fn(array $params): ConnectionCredentials => new ConnectionCredentials(
+                    host: $params['host'],
+                    port: (int)$params['port'],
+                    user: $params['user'],
+                    password: $params['password'],
+                    vHost: $params['vhost'] ?? ConnectionCredentials::DEFAULT_VHOST,
+                ),
+                $params['nodes'] ?? [$params]
+            );
+
             $this->connections[$name] = new Connection(
                 name: $name,
-                host: $params['host'],
-                port: (int)$params['port'],
-                user: $params['user'],
-                password: $params['password'],
-                vHost: $params['vhost'] ?? Connection::DEFAULT_VHOST,
+                connectionCredentials: $connectionCredentials,
                 insist: Inputs::boolValue($params['insist'] ?? Connection::DEFAULT_INSIST),
                 loginMethod: $params['login_method'] ?? Connection::DEFAULT_LOGIN_METHOD,
                 locale: $params['locale'] ?? Connection::DEFAULT_LOCALE,

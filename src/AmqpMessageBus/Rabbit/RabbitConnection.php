@@ -9,6 +9,7 @@ use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
 use Siemieniec\AmqpMessageBus\Config\Connection;
+use Siemieniec\AmqpMessageBus\Config\ConnectionCredentials;
 use Siemieniec\AmqpMessageBus\Config\ConsumerParameters;
 use Siemieniec\AmqpMessageBus\Config\Exchange;
 use Siemieniec\AmqpMessageBus\Config\PublisherTarget;
@@ -29,20 +30,27 @@ class RabbitConnection implements ConnectionInterface
 
     public function __construct(Connection $connectionConfig, private LoggerInterface $logger)
     {
-        $this->connection = new AMQPStreamConnection(
-            host: $connectionConfig->getHost(),
-            port: $connectionConfig->getPort(),
-            user: $connectionConfig->getUser(),
-            password: $connectionConfig->getPassword(),
-            vhost: $connectionConfig->getVHost(),
-            insist: $connectionConfig->isInsist(),
-            login_method: $connectionConfig->getLoginMethod(),
-            locale: $connectionConfig->getLocale(),
-            connection_timeout: $connectionConfig->getConnectionTimeout(),
-            read_write_timeout: $connectionConfig->getReadWriteTimeout(),
-            keepalive: $connectionConfig->isKeepAlive(),
-            heartbeat: $connectionConfig->getHeartbeat(),
-            ssl_protocol: $connectionConfig->getSslProtocol()
+        $this->connection = AMQPStreamConnection::create_connection(
+            \array_map(
+                fn(ConnectionCredentials $connectionCredentials): array => [
+                    'host' => $connectionCredentials->getHost(),
+                    'port' => $connectionCredentials->getPort(),
+                    'user' => $connectionCredentials->getUser(),
+                    'password' => $connectionCredentials->getPassword(),
+                    'vhost' => $connectionCredentials->getVHost()
+                ],
+                $connectionConfig->getConnectionCredentials()
+            ),
+            [
+                'insist' => $connectionConfig->isInsist(),
+                'login_method' => $connectionConfig->getLoginMethod(),
+                'locale' => $connectionConfig->getLocale(),
+                'connection_timeout' => $connectionConfig->getConnectionTimeout(),
+                'read_write_timeout' => $connectionConfig->getReadWriteTimeout(),
+                'keepalive' => $connectionConfig->isKeepAlive(),
+                'heartbeat' => $connectionConfig->getHeartbeat(),
+                'ssl_protocol' => $connectionConfig->getSslProtocol()
+            ]
         );
         $this->channel = $this->connection->channel();
     }
