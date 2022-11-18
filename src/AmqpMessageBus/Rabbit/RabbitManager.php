@@ -9,6 +9,10 @@ use Siemieniec\AmqpMessageBus\Config\Config;
 use Siemieniec\AmqpMessageBus\Config\Connection;
 use Siemieniec\AmqpMessageBus\Config\Exchange;
 use Siemieniec\AmqpMessageBus\Config\Queue;
+use Siemieniec\AmqpMessageBus\Exception\BindingDeclarationException;
+use Siemieniec\AmqpMessageBus\Exception\ExchangeDeclarationException;
+use Siemieniec\AmqpMessageBus\Exception\QueueDeclarationException;
+use Throwable;
 
 class RabbitManager
 {
@@ -33,7 +37,11 @@ class RabbitManager
 
     private function declareQueue(Queue $queue): void
     {
-        $this->getRabbitConnection($queue->getConnection())->declareQueue($queue);
+        try {
+            $this->getRabbitConnection($queue->getConnection())->declareQueue($queue);
+        } catch (Throwable $exception) {
+            throw new QueueDeclarationException($queue, $exception);
+        }
     }
 
     private function declareAllExchanges(): void
@@ -46,10 +54,23 @@ class RabbitManager
     private function declareExchange(Exchange $exchange): void
     {
         $connection = $this->getRabbitConnection($exchange->getConnection());
-        $connection->declareExchange($exchange);
+        try {
+            $connection->declareExchange($exchange);
+        } catch (Throwable $exception) {
+            throw new ExchangeDeclarationException($exchange, $exception);
+        }
+
         foreach ($exchange->getQueueBindings() as $queueBinding) {
-            $connection->declareQueue($queueBinding->getQueue());
-            $connection->bindQueue($exchange, $queueBinding);
+            try {
+                $connection->declareQueue($queueBinding->getQueue());
+            } catch (Throwable $exception) {
+                throw new QueueDeclarationException($queueBinding->getQueue(), $exception);
+            }
+            try {
+                $connection->bindQueue($exchange, $queueBinding);
+            } catch (Throwable $exception) {
+                throw new BindingDeclarationException($exchange, $queueBinding, $exception);
+            }
         }
     }
 
