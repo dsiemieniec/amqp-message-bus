@@ -52,6 +52,7 @@ final class ConfigFactory
     private function readConnections(): void
     {
         foreach ($this->config['connections'] ?? [] as $name => $params) {
+            $nodes = $params['nodes'] ?? [];
             $connectionCredentials = \array_map(
                 fn(array $params): ConnectionCredentials => new ConnectionCredentials(
                     host: $params['host'],
@@ -60,7 +61,7 @@ final class ConfigFactory
                     password: $params['password'],
                     vHost: $params['vhost'] ?? ConnectionCredentials::DEFAULT_VHOST,
                 ),
-                $params['nodes'] ?? [$params]
+                !empty($nodes) ? $nodes : [$params]
             );
 
             $this->connections[$name] = new Connection(
