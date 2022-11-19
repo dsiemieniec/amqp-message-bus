@@ -1,4 +1,4 @@
-# Async command bus
+# Amqp message bus
 
 ## Installation
 
