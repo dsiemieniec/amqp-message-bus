@@ -9,14 +9,21 @@ use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 class DefaultMessageSerializer extends AbstractMessageSerializer
 {
     protected function init(): SerializerInterface
     {
         return new SymfonySerializer(
-            [new ArrayDenormalizer(), new ObjectNormalizer()],
-            [new JsonEncoder()]
+            [
+                new DateTimeNormalizer([DateTimeNormalizer::FORMAT_KEY => DATE_ISO8601]),
+                new ArrayDenormalizer(),
+                new ObjectNormalizer()
+            ],
+            [
+                new JsonEncoder()
+            ]
         );
     }
 }
