@@ -5,7 +5,7 @@ services:
 
     Siemieniec\AmqpMessageBus\:
         resource: '../src/'
-ą
+
     Siemieniec\AmqpMessageBus\Config\ConfigFactory: ~
 
     Siemieniec\AmqpMessageBus\Config\Config:
