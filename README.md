@@ -5,7 +5,6 @@
 1. Add repository in composer.json
 ```json
 "repositories": [
-    ...
     { "type": "vcs", "url": "https://github.com/dsiemieniec/amqp-message-bus" }
 ]
 ```
