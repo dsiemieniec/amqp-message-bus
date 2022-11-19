@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Tests\Config;
 
+use PHPUnit\Framework\TestCase;
 use Siemieniec\AmqpMessageBus\Config\ConfigFactory;
 use Siemieniec\AmqpMessageBus\Config\Connection;
 use Siemieniec\AmqpMessageBus\Exception\MissingConnectionException;
 use Siemieniec\AmqpMessageBus\Exception\MissingQueueException;
 use Siemieniec\AmqpMessageBus\Serializer\DefaultMessageSerializer;
-use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
 {

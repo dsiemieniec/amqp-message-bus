@@ -1,98 +1,11 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
-
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
-parameters:
-    amqp_message_bus:
-        auto_declare: true
-        connections:
-            default:
-                host: '%env(RABBIT_CONNECTION)%'
-                port: '%env(RABBIT_PORT)%'
-                user: '%env(RABBIT_USER)%'
-                password: '%env(RABBIT_PASSWORD)%'
-                keep_alive: true
-                heartbeat: 60
-            second:
-                host: '%env(RABBIT_CONNECTION)%'
-                port: '%env(RABBIT_PORT)%'
-                user: '%env(RABBIT_USER)%'
-                password: '%env(RABBIT_PASSWORD)%'
-                vhost: 'test_vhost'
-                keep_alive: true
-                heartbeat: 60
-        exchanges:
-            test_exchange_name:
-                connection: second
-                name: test_exchange
-                type: direct
-                queue_bindings:
-                    - { queue: second_queue_name, routing_key: test_routing_key }
-            delayed_exchange:
-                name: delayed_exchange
-                type: x-delayed-message
-                arguments:
-                    x-delayed-type: direct
-                queue_bindings:
-                    - {queue: first_queue_name, routing_key: another_simple_command}
-        queues:
-            first_queue_name:
-                connection: default
-                name: first_queue
-                consumer:
-                    time_limit: 30
-            second_queue_name:
-                connection: second
-                name: second_queue
-                passive: false
-                durable: false
-                exclusive: false
-                auto_delete: false
-                consumer:
-                    time_limit: 120
-            long_running:
-                connection: default
-                name: long_running
-            queue_with_arguments:
-                arguments:
-                    x-message-ttl: 200
-        messages:
-            App\Command\AnotherSimpleCommand:
-                serializer: App\Serializer\SampleMessageSerializer
-                publisher:
-                    exchange:
-                        name: delayed_exchange
-                        routing_key: another_simple_command
-            App\Command\DispatchedToOwnQueueCommand:
-                publisher:
-                    exchange:
-                        name: test_exchange_name
-                        routing_key: test_routing_key
-            App\Command\LongRunningCommand:
-                publisher:
-                    queue: long_running
-
 services:
-    # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/Playground/'
-        exclude:
-            - '../src/Playground/DependencyInjection/'
-            - '../src/Playground/Entity/'
-            - '../src/Playground/Kernel.php'
-
     Siemieniec\AmqpMessageBus\:
-        resource: '../src/AmqpMessageBus/'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+        resource: '../src/'
+ą
     Siemieniec\AmqpMessageBus\Config\ConfigFactory: ~
 
     Siemieniec\AmqpMessageBus\Config\Config:

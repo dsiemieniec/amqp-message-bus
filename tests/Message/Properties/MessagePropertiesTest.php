@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Tests\Message\Properties;
 
-use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
-use Siemieniec\AmqpMessageBus\Message\Properties\DeliveryMode;
 use PHPUnit\Framework\TestCase;
+use Siemieniec\AmqpMessageBus\Message\Properties\DeliveryMode;
+use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
 
 class MessagePropertiesTest extends TestCase
 {

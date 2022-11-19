@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Siemieniec\AmqpMessageBus\Tests\Rabbit;
 
-use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
-use Siemieniec\AmqpMessageBus\Message\Properties\DeliveryMode;
-use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelope;
-use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformer;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;
+use Siemieniec\AmqpMessageBus\Message\Properties\DeliveryMode;
+use Siemieniec\AmqpMessageBus\Message\Properties\MessageProperties;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageEnvelope;
+use Siemieniec\AmqpMessageBus\Rabbit\MessageTransformer;
 
 class MessageTransformerTest extends TestCase
 {
